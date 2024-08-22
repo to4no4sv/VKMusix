@@ -1,2 +1,2 @@
-<h1>Установка</h1>
-<code>pip install vkmusix</code>
+<h1>Установка библиотеки и её обновление</h1>
+<code>pip install --upgrade vkmusix</code>

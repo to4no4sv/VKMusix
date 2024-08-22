@@ -252,12 +252,11 @@ class Track(_BaseModel):
 
         self.licensed = track.get("is_licensed")
 
-        self.ownerId = track.get("owner_id")
-        self.trackId = track.get("id")
-        self.id = f"{self.ownerId}_{self.trackId}"
-
         releaseAudioId = track.get("release_audio_id")
-        self.url = VK + "audio" + (self.id if not releaseAudioId else releaseAudioId)
+        self.ownerId, self.trackId = tuple(map(int, releaseAudioId.split("_"))) if releaseAudioId else (track.get("owner_id"), track.get("id"))
+
+        self.id = f"{self.ownerId}_{self.trackId}"
+        self.url = VK + f"audio{self.id}"
 
 
     @asyncFunction

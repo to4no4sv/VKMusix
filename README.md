@@ -15,3 +15,4 @@ result = client.searchArtists("prombl")
 print(result)
 
 client.close()
+```

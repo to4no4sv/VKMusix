@@ -165,7 +165,7 @@ class Get:
 
         if isinstance(tracks, list):
             for index, track in enumerate(tracks):
-                tracks[index] = Track({"owner_id": track[1], "id": track[0], "title": track[3], "subtitle": track[16], "main_artists": track[17], "duration": track[5]}) if len(track) > 3 else None
+                tracks[index] = Track({"owner_id": track[1], "id": track[0], "title": track[3], "subtitle": track[16], "main_artists": track[17], "duration": track[5]}, self) if len(track) > 3 else None
 
             if not tracks or all(track is None for track in tracks):
                 tracks = None

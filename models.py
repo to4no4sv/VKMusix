@@ -18,7 +18,7 @@
 
 import re
 import pytz
-from typing import Union, List
+from typing import Union, List, Tuple
 from datetime import datetime
 
 from .aio import asyncFunction
@@ -380,6 +380,16 @@ class Playlist(_BaseModel):
     @asyncFunction
     async def copy(self, groupId: int = None, newTitle: Union[str, None] = str(), newDescription: Union[str, None] = str(), newPhoto: Union[str, None] = str()) -> Union["Playlist", None, Error]:
         return await self._client.copyPlaylist(self.playlistId, self.ownerId, groupId, newTitle, newDescription, newPhoto)
+
+
+    @asyncFunction
+    async def addTrack(self, ownerIds: Union[int, List[int]], trackIds: Union[int, List[int]]) -> Union[Tuple[Union[bool, Error]], Error]:
+        return await self._client.add(ownerIds, trackIds, self.playlistId, self.ownerId)
+
+
+    @asyncFunction
+    async def removeTrack(self, ownerIds: Union[int, List[int]], trackIds: Union[int, List[int]], reValidateIds: bool = True) -> Union[Tuple[Union[bool, Error]], Error]:
+        return await self._client.remove(ownerIds, trackIds, self.playlistId, self.ownerId, reValidateIds)
 
 
 trackGenres = {

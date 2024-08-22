@@ -169,19 +169,21 @@ class Album(_BaseModel):
 
         self.ownerId = album.get("owner_id")
         if not playlist:
-            self.albumId = album.get("id") or album.get("playlist_id")
+            self.playlistId = None
+            self.albumId = album.get("id") or album.get("album_id")
             self.id = f"{self.ownerId}_{self.albumId}"
             self.url = VK + "music/album/" + self.id
 
         else:
-            self.playlistId = album.get("id")
+            self.albumId = None
+            self.playlistId = album.get("id") or album.get("playlist_id")
             self.id = f"{self.ownerId}_{self.playlistId}"
             self.url = VK + "music/playlist/" + self.id
 
 
     @asyncFunction
     async def get(self, includeTracks: bool = False) -> Union["Album", Error]:
-        return await self._client.getAlbum(self.ownerId, self.albumId, includeTracks)
+        return await self._client.getAlbum(self.ownerId, self.albumId or self.playlistId, includeTracks)
 
 
 class Track(_BaseModel):

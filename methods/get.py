@@ -325,7 +325,7 @@ class Get:
         tracks = (await self._VKReq("getAudioIdsBySource", {"source": "feed"})).get("audios")
         for index, track in enumerate(tracks):
             ownerId, trackId = track.get("audio_id").split("_")[:2]
-            tracks[index] = Track({"owner_id": int(ownerId), "track_id": int(trackId)})
+            tracks[index] = Track({"owner_id": int(ownerId), "id": int(trackId)})
 
         return tracks
 

@@ -1,4 +1,4 @@
-# VKMusix [![PyPI version](https://badge.fury.io/py/vkmusix.svg)](https://badge.fury.io/py/vkmusix)
+# VKMusix [![PyPI version](https://badge.fury.io/py/vkmusix.svg)](https://pypi.org/project/vkmusix)
 
 ## Установка и обновление
 ```bash

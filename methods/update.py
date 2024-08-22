@@ -58,13 +58,13 @@ class Update:
 
         filename = checkFile(filename + ".mp3")
         if not filename:
-            self._raiseError("MP3FileNotFound")
+            return self._raiseError("MP3FileNotFound")
 
         fileSizeInBytes = os.path.getsize(filename)
         fileSizeInMB = fileSizeInBytes / (1024 * 1024)
 
         if fileSizeInMB > 200:
-            self._raiseError("MP3FileTooBig")
+            return self._raiseError("MP3FileTooBig")
 
         uploadUrl = (await self._VKReq("getUploadServer")).get("upload_url")
 
@@ -519,7 +519,7 @@ class Update:
             return self._raiseError("trackReorderNeedsBeforeOrAfterArgument")
 
         if all((beforeTrackId, afterTrackId)):
-            return self._raiseError("trackReorderNeedsOnlyBeforOrAfterNotBoth")
+            return self._raiseError("trackReorderNeedsOnlyBeforeOrAfterNotBoth")
 
         response = await self._VKReq("reorder", {"audio_id": trackId, **({"before": beforeTrackId} if beforeTrackId else {"after": afterTrackId})})
         return bool(response) if not isinstance(response, Error) else response

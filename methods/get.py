@@ -59,11 +59,14 @@ class Get:
 
         if includeLyrics:
             lyrics = responses[1]
-            if not lyrics.get("error"):
+            if not isinstance(lyrics, Error):
                 lyrics = lyrics.get("lyrics")
                 timestamps = lyrics.get("timestamps")
 
                 track["lyrics"] = "\n".join([line.get("line") for line in timestamps if line.get("line") is not None] if timestamps else lyrics.get("text"))
+
+            elif lyrics._code != 17:
+                track["lyrics"] = lyrics
 
         return self._finalizeResponse(track, Track)
 
@@ -150,7 +153,6 @@ class Get:
         return self._finalizeResponse((await self._VKReq("getRelatedArtistsById", {"artist_id": artistId, "count": limit})).get("artists"), Artist)
 
 
-    @asyncFunction
     async def _getTracks(self, tracks: str, objectType: Union[Type[Union[Album, Playlist]], None] = None) -> Union[List[Track], Error]:
         tracks = re.sub(r"\\/", "/", re.sub(r"false", "False", re.sub(r"true", "True", tracks)))
         try:
@@ -231,11 +233,12 @@ class Get:
         responses = await asyncio.gather(*tasks)
 
         playlist = responses[0]
-        if playlist.get("error"):
+        if isinstance(playlist, Error):
             return playlist
 
         if includeTracks:
             playlist["tracks"] = await self._getTracks(responses[1], Playlist)
+
         return self._finalizeResponse(playlist, Playlist)
 
 
@@ -264,7 +267,7 @@ class Get:
 
         method, params = "getPlaylists", {"owner_id": ownerId, "count": playlistsPerReq}
         playlists_ = await self._VKReq(method, params)
-        if playlists_.get("error"):
+        if isinstance(playlists_, Error):
             return playlists_
 
         playlists = [playlist for playlist in playlists_.get("items")]
@@ -466,7 +469,7 @@ class Get:
             id = id - (id * 2)
 
         broadcast = await self._VKReq("status.get", {"user_id": id} if id else None)
-        if broadcast.get("error"):
+        if isinstance(broadcast, Error):
             return broadcast
 
         audio = broadcast.get("audio")

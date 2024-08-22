@@ -327,7 +327,7 @@ class Get:
             ownerId, trackId = track.get("audio_id").split("_")[:2]
             tracks[index] = Track({"owner_id": int(ownerId), "id": int(trackId)})
 
-        return tracks
+        return self._finalizeResponse(tracks, Track)
 
 
     @asyncFunction

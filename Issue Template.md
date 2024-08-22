@@ -26,7 +26,7 @@
 
 ### Versions of Python and Library
 
-Please provide the versions of Python and the library you are using.
+Please provide the versions of Python and the Library you are using.
 
 ### Problem Description
 

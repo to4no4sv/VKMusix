@@ -474,7 +474,7 @@ class Get:
 
         audio = broadcast.get("audio")
         if audio:
-            return Track(audio)
+            return Track(audio, self)
 
         else:
             if not id or id == (await self.getSelf()).get("id"):

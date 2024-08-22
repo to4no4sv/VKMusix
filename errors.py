@@ -49,7 +49,7 @@ errorsDict = {
     "artistNotFound": ("Артист не найден. Проверьте введённый `artistId`.", "Artist not found. Please check the entered `artistId`."),
     "albumNotFound": ("Альбом не найден. Проверьте введённые `ownerId` и (или) `albumId`.", "Album not found. Please check the entered `ownerId` and/or `albumId`."),
     "trackNotFound": ("Аудиотрек не найден. Проверьте введённые `ownerId` и (или) `trackId`", "Track not found. Please check the entered `ownerId` and/or `trackId`."),
-    "playlistNotFound": ("Плейлист не найден. Проверьте введённые `ownerId` (`groupId`) и (или) `playlistId`", "Playlist not found. Please check the entered `ownerId` and/or `playlistId`."),
+    "playlistNotFound": ("Плейлист не найден. Проверьте введённые `ownerId` (`groupId`) и (или) `playlistId`", "Playlist not found. Please check the entered `ownerId` (`groupId`) and/or `playlistId`."),
 
     "ownerIdsAndTrackIdsTypeDifferent": ("Типы `ownerIds` и `trackIds` не могут отличаться.", "The types of `ownerIds` and `trackIds` must be the same."),
     "ownerIdsAndTrackIdsLenDifferent": ("Длины `ownerIds` и `trackIds` не могут отличаться.", "The lengths of `ownerIds` and `trackIds` must be the same."),
@@ -57,10 +57,10 @@ errorsDict = {
     "noneQuery": ("Не указана строка для поиска.", "Search string not specified."),
 
     "trackReorderNeedsBeforeOrAfterArgument": ("Для изменения порядка аудиотрека необходимо указать `beforeTrackId` или и `afterTrackId`.", "To change the order of the track, you need to specify either `beforeTrackId` or `afterTrackId`."),
-    "trackReorderNeedsOnlyBeforOrAfterNotBoth": ("Для изменения порядка аудиотрека необоходимо указать `beforeTrackId` или `afterTrackId`, но не оба типа.", "To change the order of a track, you need to specify either `beforeTrackId`, or `afterTrackId`, but not both types."),
+    "trackReorderNeedsOnlyBeforeOrAfterNotBoth": ("Для изменения порядка аудиотрека необоходимо указать `beforeTrackId` или `afterTrackId`, но не оба типа.", "To change the order of a track, you need to specify either `beforeTrackId`, or `afterTrackId`, but not both types."),
 
-    "MP3FileNotFound": ("MP3-файл с аудиотреком не найден. Убедитесь, что вы указали правильное название файла.", "The MP3 file with the track was not found. Please make sure you have specified the correct filename.", True),
-    "MP3FileTooBig": ("MP3-файл слишком большой. Максимальный размер 200 МБ", "MP3 file too big. Max size is 200 MB.", True),
+    "MP3FileNotFound": ("MP3-файл с аудиотреком не найден. Убедитесь, что вы указали правильное название файла.", "The MP3 file with the track was not found. Please make sure you have specified the correct filename."),
+    "MP3FileTooBig": ("MP3-файл слишком большой. Максимальный размер 200 МБ", "MP3 file too big. Max size is 200 MB."),
 
     "tooHighRequestSendingRate": ("Слишком высокая частота отправки запросов.", "Too high request sending rate."),
 }

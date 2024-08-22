@@ -35,12 +35,12 @@ from ..utils import checkFile
 
 class Update:
     @asyncFunction
-    async def upload(self, filename: str, title: str = None, artist: str = None, lyrics: str = None, genreId: int = None, removeFromSearchResults: bool = None, groupId: int = None) -> Union[Track, Error]:
+    async def upload(self, filename: str, title: str = None, artist: str = None, lyrics: str = None, genreId: int = None, removeFromSearchResults: bool = None, playlistId: int = None, groupId: int = None) -> Union[Track, Error]:
         """
         Загружает новый аудиотрек во ВКонтакте.
 
         Пример загрузки файла с названием «prombl — zapreti.mp3»:\n
-        result = client.upload(filename="prombl — zapreti", title="zapreti", artist="prombl", lyrics="yourLyrics", removeFromSearchResults=True, groupId="yourGroupId")\n
+        result = client.upload(filename="prombl — zapreti", title="zapreti", artist="prombl", lyrics="yourLyrics", removeFromSearchResults=True, playlistId="yourPlaylistId", groupId="yourGroupId")\n
         print(result)
 
         :param filename: имя MP3-файла, содержащего аудиотрек, который необходимо загрузить (без расширения). (str)
@@ -49,14 +49,15 @@ class Update:
         :param lyrics: текст аудиотрека. (str, необязательно)
         :param genreId: жанр аудиотрека (в виде идентификатора). (int, необязательно)
         :param removeFromSearchResults: флаг, указывающий, будет ли аудиотрек скрыт из поисковой выдачи. (bool, необязательно)
-        :param groupId: идентификатор группы, в музыку которой необходимо загрузить аудиотрек (int, необязательно)
+        :param playlistId: идентификатор плейлиста, в который необходимо загрузить аудиотрек. (int, необязательно)
+        :param groupId: идентификатор группы, в музыку которой необходимо загрузить аудиотрек. (int, необязательно)
         :return: загруженный аудиотрек в виде объекта модели `Track`.
         """
 
         if filename.endswith(".mp3"):
             filename = filename[:-4]
 
-        filename = checkFile(filename + ".mp3")
+        filename = checkFile(f"{filename}.mp3")
         if not filename:
             return self._raiseError("MP3FileNotFound")
 
@@ -67,6 +68,8 @@ class Update:
             return self._raiseError("MP3FileTooBig")
 
         uploadUrl = (await self._VKReq("getUploadServer")).get("upload_url")
+        if isinstance(uploadUrl, Error):
+            return uploadUrl
 
         async with aiofiles.open(filename, "rb") as file:
             fileContent = await file.read()
@@ -81,15 +84,15 @@ class Update:
         if isinstance(track, Error):
             return track
 
-        track = Track(track)
+        track = Track(track, self)
 
         if any((lyrics, genreId, removeFromSearchResults)):
-            await self.edit(track.ownerId, track.trackId, lyrics=lyrics, genreId=genreId, removeFromSearchResults=removeFromSearchResults)
-            track = await self.get(track.ownerId, track.trackId, True)
+            await track.edit(lyrics=lyrics, genreId=genreId, removeFromSearchResults=removeFromSearchResults)
+            track = await track.get(True)
 
-        if groupId:
-            await self.add(track.ownerId, track.trackId, groupId=groupId)
-            await self.remove(track.ownerId, track.trackId)
+        if any((playlistId, groupId)):
+            await track.add(playlistId, groupId)
+            await track.remove()
 
         return track
 
@@ -288,12 +291,12 @@ class Update:
 
 
     @asyncFunction
-    async def createPlaylist(self, title: Union[str, int], description: Union[str, int] = None, photo: str = None, groupId: int = None, chatId: int = None) -> Union[int, Error, None]:
+    async def createPlaylist(self, title: Union[str, int], description: Union[str, int] = None, photo: str = None, groupId: int = None, chatId: int = None) -> Union[Playlist, None, Error]:
         """
         Создаёт плейлист в музыке пользователя или группы.
 
         Пример использования:\n
-        result = client.createPlaylist(title="prombl — npc", description="Release Date: December 24, 2021", "photo"="yourPhotoUrl", "groupId"="yourGroupId", chatId="yourChatId")\n
+        result = client.createPlaylist(title="prombl — npc", description="Release Date: December 24, 2021", "photo"="yourPhotoFilename", "groupId"="yourGroupId", chatId="yourChatId")\n
         print(result)
 
         :param title: название плейлиста. (str)
@@ -301,32 +304,24 @@ class Update:
         :param photo: фото плейлиста. (str, необязательно, временно не работает)
         :param groupId: идентификатор группы, в которой необходимо создать плейлист. (int, необязательно)
         :param chatId: идентификатор чата, к которому привязать плейлист. (int, формат: `2000000000 + идентификатор чата`)
-        :return: идентификатор плейлиста или словарь с ключами `ownerId` и `playlistId` (если создаётся плейлист, привязанный к чату), если плейлист успешно создан, `None` в противном случае.
+        :return: созданный плейлист в виде объекта модели `Playlist` с атрибутами `ownerId`, `playlistId`, `id`, `url` и `own`, если плейлист успешно создан, `None` в противном случае.
         """
 
         if not groupId:
             groupId = (await self.getSelf()).get("id")
 
-        if chatId:
-            method = "createChatPlaylist"
+        playlist = await self._VKReq("createPlaylist" if not chatId else "createChatPlaylist", {"title": title, "description": description, "owner_id": groupId})
+        if isinstance(playlist, Error):
+            return playlist
 
-        else:
-            method = "createPlaylist"
-
-        playlist = await self._VKReq(method, {"title": title, "description": description, "owner_id": groupId})
         playlistId = playlist.get("id")
+        if chatId:
+            groupId = playlist.get("owner_id")
 
-        if playlistId:
-            if chatId:
-                playlistOwnerId = playlist.get("owner_id")
-                return {"ownerId": playlistOwnerId, "playlistId": playlistId}
+        """if photo:
+            await self._editPlaylistPhoto(playlistId, photo, groupId)"""
 
-            return playlistId
-
-            """if photo:
-                await self._editPlaylistPhoto(playlistId, photo, groupId)"""
-
-        return playlist
+        return Playlist({"owner_id": groupId, "playlist_id": playlistId}, True, client=self)
 
 
     @asyncFunction
@@ -400,7 +395,7 @@ class Update:
         Изменяет информацию плейлиста, принадлежащего пользователю или группе.
 
         Пример использования:\n
-        result = client.editPlaylist(playlistId="yourPlaylistId", title="prombl — npc", description="Release Date: December 24, 2021", photo="yourPhotoUrl", groupId="yourGroupId")\n
+        result = client.editPlaylist(playlistId="yourPlaylistId", title="prombl — npc", description="Release Date: December 24, 2021", photo="yourPhotoFilename", groupId="yourGroupId")\n
         print(result)
 
         :param playlistId: идентификатор плейлиста, информацию которого необходимо изменить.
@@ -458,7 +453,7 @@ class Update:
         :param newTitle: новое название плейлиста, `None` для использования текущих даты и времени. (str или None, по умолчанию оригинальное название)
         :param newDescription: новое описание плейлиста, `None` для удаления описания. (str или None, по умолчанию оригинальное описание)
         :param newPhoto: новая обложка плейлиста, `None` для удаления обложки. (str или None, по умолчанию оригинальная обложка)
-        :return: плейлист в виде объекта модели `Playlist` с атрибутами `ownerId`, `playlistId`, `id` и `url`, если плейлист успешно скопирован, `None` в противном случае.
+        :return: скопированный плейлист в виде объекта модели `Playlist` с атрибутами `ownerId`, `playlistId`, `id` и `url`, если плейлист успешно скопирован, `None` в противном случае.
         """
 
         if not ownerId:

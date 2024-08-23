@@ -204,14 +204,14 @@ class Track(_BaseModel):
         hasLyrics (bool, optional): флаг, указывающий, имеет ли аудиотрек текст.\n
         uploadedAt (datetime, optional): дата и время загрузки аудиотрека (UTC +03:00).\n
         album (Album, optional): альбом, к которому принадлежит аудиотрек, представленный объектом класса `Album`.\n
-        releaseAudio(Track, optional): аудиотрек, загруженный официально, похожий на данный.\n
+        releaseTrack (Track, optional): аудиотрек, загруженный официально, похожий на данный.\n
         ownerId (str): идентификатор владельца аудиотрека.\n
         trackId (str): идентификатор аудиотрека.\n
         id (str): комбинированный идентификатор в формате `ownerId_trackId`.\n
         url (str): URL страницы аудиотрека.
     """
 
-    def __init__(self, track: dict, client: "Client" = None, releaseAudio: bool = False) -> None:
+    def __init__(self, track: dict, client: "Client" = None, releaseTrack: bool = False) -> None:
         super().__init__(client)
 
         self.title = track.get("title")
@@ -255,13 +255,13 @@ class Track(_BaseModel):
 
         self.licensed = track.get("is_licensed")
 
-        self.releaseAudio = None
-        if not releaseAudio:
-            releaseAudioId = track.get("release_audio_id")
+        self.releaseTrack = None
+        if not releaseTrack:
+            releaseTrackId = track.get("release_audio_id")
 
-            if releaseAudioId:
-                releaseAudioOwnerId, releaseAudioTrackId = tuple(map(int, releaseAudioId.split("_")))
-                self.releaseAudio = Track({"owner_id": releaseAudioOwnerId, "track_id": releaseAudioTrackId}, self._client, True)
+            if releaseTrackId:
+                releaseTrackOwnerId, releaseTrackTrackId = tuple(map(int, releaseTrackId.split("_")))
+                self.releaseTrack = Track({"owner_id": releaseTrackOwnerId, "track_id": releaseTrackTrackId}, self._client, True)
 
         self.ownerId = track.get("owner_id")
         self.trackId = track.get("id") or track.get("track_id")

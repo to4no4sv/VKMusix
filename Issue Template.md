@@ -24,7 +24,7 @@
 
 ------
 
-### Versions of Python and Library
+### Versions of Python and the Library
 
 Please provide the versions of Python and the Library you are using.
 

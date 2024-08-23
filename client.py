@@ -269,7 +269,7 @@ class Client(Utils, Search, Get, Update):
                     obj = Album(obj, True, self)
 
             else:
-                obj = objectType(obj, self)
+                obj = objectType(obj, client=self)
 
             response[index] = obj
 

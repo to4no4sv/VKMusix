@@ -303,7 +303,7 @@ class Update:
         :param description: описание плейлиста. (str, необязательно)
         :param photo: фото плейлиста. (str, необязательно, временно не работает)
         :param groupId: идентификатор группы, в которой необходимо создать плейлист. (int, необязательно)
-        :param chatId: идентификатор чата, к которому привязать плейлист. (int, формат: `2000000000 + идентификатор чата`)
+        :param chatId: идентификатор чата, к которому небходимо привязать плейлист. (int, формат: `2000000000 + идентификатор чата`)
         :return: созданный плейлист в виде объекта модели `Playlist` с атрибутами `ownerId`, `playlistId`, `id`, `url` и `own`, если плейлист успешно создан, `None` в противном случае.
         """
 
@@ -450,11 +450,11 @@ class Update:
         :param playlistId: идентификатор плейлиста, который необходимо скопировать. (int)
         :param ownerId: идентификатор владельца плейлиста (пользователь или группа). (int, по умолчанию текущий пользователь)
         :param groupId: идентификатор группы, в которую необходимо скопировать плейлист. (int, необязательно)
-        :param chatId: идентификатор чата, к которому привязать плейлист. (int, формат: `2000000000 + идентификатор чата`)
+        :param chatId: идентификатор чата, к которому небходимо привязать плейлист. (int, формат: `2000000000 + идентификатор чата`)
         :param newTitle: новое название плейлиста, `None` для использования текущих даты и времени. (str или None, по умолчанию оригинальное название)
         :param newDescription: новое описание плейлиста, `None` для удаления описания. (str или None, по умолчанию оригинальное описание)
         :param newPhoto: новая обложка плейлиста, `None` для удаления обложки. (str или None, по умолчанию оригинальная обложка)
-        :return: скопированный плейлист в виде объекта модели `Playlist` с атрибутами `ownerId`, `playlistId`, `id` и `url`, если плейлист успешно скопирован, `None` в противном случае.
+        :return: скопированный плейлист в виде объекта модели `Playlist` с атрибутами `ownerId`, `playlistId`, `id`, `url` и `own`, если плейлист успешно скопирован, `None` в противном случае.
         """
 
         playlist = await self.getPlaylist(playlistId, ownerId or (await self.getSelf()).get("id"), True)
@@ -484,9 +484,9 @@ class Update:
         tracks = playlist.tracks
         if tracks:
             ownerIds, trackIds = zip(*[(track.ownerId, track.trackId) for track in tracks[::-1]])
-            await newPlaylist.add(list(ownerIds), list(trackIds))
+            await newPlaylist.addTrack(list(ownerIds), list(trackIds))
 
-        return Playlist({"owner_id": groupId or (await self.getSelf()).get("id"), "playlist_id": newPlaylist.playlistId}, True, self)
+        return newPlaylist
 
 
     @asyncFunction

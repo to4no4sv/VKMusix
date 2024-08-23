@@ -57,6 +57,9 @@ class Get:
         if not track:
             return self._raiseError("trackNotFound")
 
+        if isinstance(track, Error):
+            return track
+
         if includeLyrics:
             lyrics = responses[1]
             if not isinstance(lyrics, Error):
@@ -126,6 +129,9 @@ class Get:
         artist = responses[0]
         if not artist.get("name"):
             return self._raiseError("artistNotFound")
+
+        if isinstance(artist, Error):
+            return artist
 
         if includeAlbums:
             artist["albums"] = responses[1].get("items")
@@ -201,6 +207,9 @@ class Get:
         if not album:
             return self._raiseError("albumNotFound")
 
+        if isinstance(album, Error):
+            return album
+
         if includeTracks:
             album["tracks"] = await self._getTracks(responses[1], Album)
 
@@ -233,6 +242,9 @@ class Get:
         responses = await asyncio.gather(*tasks)
 
         playlist = responses[0]
+        if not playlist:
+            return self._raiseError("playlistNotFound")
+
         if isinstance(playlist, Error):
             return playlist
 

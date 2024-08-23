@@ -66,7 +66,7 @@ class Artist(_BaseModel):
         self.tracks = [Track(track, self._client) for track in tracks] if tracks else None
 
         if self.nickname not in ["Various Artists", "Various Artist"]:
-            self.id = artist.get("id")
+            self.id = artist.get("id") or artist.get("artist_id")
             domain = artist.get("domain")
             self.url = VK + "artist/" + (domain if domain else self.id)
 
@@ -255,7 +255,7 @@ class Track(_BaseModel):
         self.licensed = track.get("is_licensed")
 
         releaseAudioId = track.get("release_audio_id")
-        self.ownerId, self.trackId = tuple(map(int, releaseAudioId.split("_"))) if releaseAudioId else (track.get("owner_id"), track.get("id"))
+        self.ownerId, self.trackId = tuple(map(int, releaseAudioId.split("_"))) if releaseAudioId else (track.get("owner_id"), (track.get("id") or track.get("track_id")))
 
         self.id = f"{self.ownerId}_{self.trackId}"
         self.url = VK + f"audio{self.id}"
@@ -438,4 +438,4 @@ class Genre(_BaseModel):
         else:
             self.title = genre.get("name")
 
-            self.id = genre.get("id")
+            self.id = genre.get("id") or genre.get("genre_id")

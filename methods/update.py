@@ -321,7 +321,7 @@ class Update:
         """if photo:
             await self._editPlaylistPhoto(playlistId, photo, groupId)"""
 
-        return Playlist({"owner_id": groupId, "playlist_id": playlistId}, True, client=self)
+        return Playlist({"owner_id": groupId, "playlist_id": playlistId}, True, self)
 
 
     @asyncFunction
@@ -439,7 +439,7 @@ class Update:
 
 
     @asyncFunction
-    async def copyPlaylist(self, playlistId: int, ownerId: int = None, groupId: int = None, newTitle: Union[str, None] = str(), newDescription: Union[str, None] = str(), newPhoto: Union[str, None] = str()) -> Union[Playlist, None, Error]:
+    async def copyPlaylist(self, playlistId: int, ownerId: int = None, groupId: int = None, chatId: int = None, newTitle: Union[str, None] = str(), newDescription: Union[str, None] = str(), newPhoto: Union[str, None] = str()) -> Union[Playlist, None, Error]:
         """
         Копирует плейлист, принадлежий пользователю или группе в музыку пользователя или группы.
 
@@ -450,16 +450,14 @@ class Update:
         :param playlistId: идентификатор плейлиста, который необходимо скопировать. (int)
         :param ownerId: идентификатор владельца плейлиста (пользователь или группа). (int, по умолчанию текущий пользователь)
         :param groupId: идентификатор группы, в которую необходимо скопировать плейлист. (int, необязательно)
+        :param chatId: идентификатор чата, к которому привязать плейлист. (int, формат: `2000000000 + идентификатор чата`)
         :param newTitle: новое название плейлиста, `None` для использования текущих даты и времени. (str или None, по умолчанию оригинальное название)
         :param newDescription: новое описание плейлиста, `None` для удаления описания. (str или None, по умолчанию оригинальное описание)
         :param newPhoto: новая обложка плейлиста, `None` для удаления обложки. (str или None, по умолчанию оригинальная обложка)
         :return: скопированный плейлист в виде объекта модели `Playlist` с атрибутами `ownerId`, `playlistId`, `id` и `url`, если плейлист успешно скопирован, `None` в противном случае.
         """
 
-        if not ownerId:
-            ownerId = (await self.getSelf()).get("id")
-
-        playlist = await self.getPlaylist(playlistId, ownerId, True)
+        playlist = await self.getPlaylist(playlistId, ownerId or (await self.getSelf()).get("id"), True)
         if isinstance(playlist, Error):
             return playlist
 
@@ -479,16 +477,16 @@ class Update:
         elif photo:
             _, photo = photo.popitem()
 
-        newPlaylistId = await self.createPlaylist(title, description, photo, groupId)
-        if isinstance(newPlaylistId, Error):
-            return newPlaylistId
+        newPlaylist = await self.createPlaylist(title, description, photo, groupId, chatId)
+        if isinstance(newPlaylist, Error):
+            return newPlaylist
 
         tracks = playlist.tracks
         if tracks:
             ownerIds, trackIds = zip(*[(track.ownerId, track.trackId) for track in tracks[::-1]])
-            await self.add(list(ownerIds), list(trackIds), newPlaylistId, groupId)
+            await newPlaylist.add(list(ownerIds), list(trackIds))
 
-        return Playlist({"owner_id": groupId or (await self.getSelf()).get("id"), "id": newPlaylistId})
+        return Playlist({"owner_id": groupId or (await self.getSelf()).get("id"), "playlist_id": newPlaylist.playlistId}, True, self)
 
 
     @asyncFunction

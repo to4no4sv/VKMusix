@@ -158,22 +158,22 @@ class Get:
 
         return self._finalizeResponse((await self._VKReq("getRelatedArtistsById", {"artist_id": artistId, "count": limit})).get("artists"), Artist)
 
-
+    
     async def _getTracks(self, tracks: str, objectType: Union[Type[Union[Album, Playlist]], None] = None) -> Union[List[Track], Error]:
         tracks = re.sub(r"\\/", "/", re.sub(r"false", "False", re.sub(r"true", "True", tracks)))
         try:
-            if objectType:
-                tracks = eval(tracks[tracks.rfind("[["): tracks.rfind("]]") + 2])
-
-            else:
-                tracks = []
+            tracks = eval(tracks[tracks.rfind("[["): tracks.rfind("]]") + 2]) if objectType else list()
 
         except SyntaxError:
             tracks = self._raiseError("accessDenied" + ("WithoutCookie" if not hasattr(self, "_cookies") else ""))
 
         if isinstance(tracks, list):
             for index, track in enumerate(tracks):
-                tracks[index] = Track({"owner_id": track[1], "id": track[0], "title": track[3], "subtitle": track[16], "main_artists": track[17], "duration": track[5]}, self) if len(track) > 3 else None
+                album = track[19]
+                if album:
+                    album.append(dict(zip(["photo_160", "photo_300"], track[14].split(",")[::-1])))
+
+                tracks[index] = Track({"owner_id": track[1], "track_id": track[0], "title": track[3], "artist": track[4], "subtitle": track[16], "main_artists": track[17], "featured_artists": track[18], "duration": track[5], "album": {"owner_id": album[0], "album_id": album[1], **({"photo": album[3]} if len(album) == 4 else dict())} if album else dict(), "release_audio_id": track[-2]}, self) if len(track) > 3 else None
 
             if not tracks or all(track is None for track in tracks):
                 tracks = None

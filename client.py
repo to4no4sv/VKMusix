@@ -26,23 +26,43 @@ class Client(Utils, Search, Get, Update):
         VKToken (str, optional): Токен доступа к ВКонтакте API.\n
         RuCaptchaKey (str, optional): Ключ для решения капчи через сервис RuCaptcha. Если не указан, капча может потребовать ручного решения.\n
         errorsLanguage (str, optional): Язык ошибок (например, `ru` для русского, `en` для английского). Если не указан, используются оба языка.\n
+        proxies (dict, optional): прокси, которые будут использоваться при запросах. Формат {"протокол": "логин:пароль@IP:порт"}\n
         login (str, optional): Логин аккаунта ВКонтакте. Используется для получения cookie, необходимых для некоторых методов.\n
         password (str, optional): Пароль аккаунта ВКонтакте. Используется для получения cookie, необходимых для некоторых методов.\n
         cookieFilename (str, optional): Название файла c cookie. По умолчанию введённый логин.
 
     Пример использования:
-        client = Client(VKToken="yourVKToken", RuCaptchaKey="yourRuCaptchaKey", errorsLanguage="ru", login="admin@vkmusix.ru", password="vkmusix.ru", cookieFilename="admin")
+        client = Client(VKToken="yourVKToken", RuCaptchaKey="yourRuCaptchaKey", errorsLanguage="ru", proxies={"http": "proxyLogin:proxyPassword@proxyIP:proxyPort", "socks5": "proxyLogin:proxyPassword@proxyIP:proxyPort"}, login="admin@vkmusix.ru", password="vkmusix.ru", cookieFilename="admin")
         result = client.searchArtists("prombl")
         print(result)
     """
 
 
-    def __init__(self, VKToken: str = None, RuCaptchaKey: str = None, errorsLanguage: str = None, login: str = None, password: str = None, cookieFilename: str = None) -> None:
+    def __init__(self, VKToken: str = None, RuCaptchaKey: str = None, errorsLanguage: str = None, proxies: dict = None, login: str = None, password: str = None, cookieFilename: str = None) -> None:
         if not VKToken:
             VKToken = input("Получите токен ВКонтакте с правами на аудиозаписи и доступ в любое время на сайте `https://vkhost.github.io/` (приложение VK Admin) и отправьте его: ")
 
         self._RuCaptchaKey = RuCaptchaKey
         self._errorsLanguage = errorsLanguage.lower() if errorsLanguage and isinstance(errorsLanguage, str) and errorsLanguage.lower() in ["ru", "en"] else None
+
+        if not proxies:
+            self._proxies = None
+
+        else:
+            if not isinstance(proxies, dict):
+                self._raiseError("proxyShouldBeDict")
+
+            newProxies = dict()
+
+            for scheme in proxies.keys():
+                if scheme.lower() not in ("http", "https", "socks4", "socks5"):
+                    self._raiseError("invalidProxyDict")
+
+                proxyURL = proxies.get(scheme)
+                scheme = scheme.lower() + ("://" if not scheme.endswith("://") else str())
+                newProxies[scheme] = (scheme if scheme not in proxyURL else str()) + proxyURL
+
+            self._proxies = newProxies
 
         import sys
         if sys.version_info < (3, 6):
@@ -76,7 +96,7 @@ class Client(Utils, Search, Get, Update):
             if isinstance(self._cookies, dict):
                 self._raiseError(self._cookies.get("error"))
 
-        self._clientSession = httpx.AsyncClient()
+        self._clientSession = httpx.AsyncClient(proxies=self._proxies)
         self._client = WebClient(self._clientSession)
 
         self._defaultParams = {"access_token": VKToken, "v": VKAPIVersion}

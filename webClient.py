@@ -86,4 +86,7 @@ class Client:
                 retriesLocal -= 1
                 await asyncio.sleep(sleepTime)
 
+            except Exception as e:
+                print(e)
+
     sendReq = sendRequest

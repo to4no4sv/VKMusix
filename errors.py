@@ -63,6 +63,9 @@ errorsDict = {
     "MP3FileTooBig": ("MP3-файл слишком большой. Максимальный размер 200 МБ", "MP3 file too big. Max size is 200 MB."),
 
     "tooHighRequestSendingRate": ("Слишком высокая частота отправки запросов.", "Too high request sending rate."),
+
+    "proxyShouldBeDict": ("Прокси должны быть словарём.", "Proxy should be `dict`", True),
+    "invalidProxyDict": ("Ключи словаря с прокси должны начинаться с `http`, `https`, `socks4` или `socks5`.", "The proxy `dict` keys must start with `http`, `https`, `socks4`, or `socks5`.", True),
 }
 
 

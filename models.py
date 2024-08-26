@@ -148,6 +148,9 @@ class Album(_BaseModel):
         plays = album.get("plays")
         self.plays = plays if plays else None
 
+        followers = album.get("followers")
+        self.followers = followers if followers else None
+
         uploadedAt = album.get("create_time")
         self.uploadedAt = unixToDatetime(uploadedAt) if uploadedAt else None
 
@@ -157,10 +160,13 @@ class Album(_BaseModel):
         photo = album.get("photo")
         if not photo:
             photo = album.get("thumb")
-        self.photo = {key.split("_")[1]: value[:value.rfind("&c_uniq_tag=")] for key, value in photo.items() if key.startswith("photo_")} if photo else None
+        self.photo = {key.split("_")[1]: value[:value.rfind("&c_uniq_tag=")][:value.rfind("&type=")] for key, value in photo.items() if key.startswith("photo_")} if photo else None
 
         original = album.get("original")
         self.original = Album(original, client=self._client) if original else None
+
+        tracksCount = album.get("count")
+        self.tracksCount = tracksCount if tracksCount else None
 
         tracks = album.get("tracks")
         self.tracks = tracks if tracks else None
@@ -170,13 +176,13 @@ class Album(_BaseModel):
         self.ownerId = album.get("owner_id")
         if not playlist:
             self.playlistId = None
-            self.albumId = album.get("id") or album.get("album_id")
+            self.albumId = album.get("id") or album.get("album_id") or album.get("playlist_id")
             self.id = f"{self.ownerId}_{self.albumId}"
             self.url = VK + "music/album/" + self.id
 
         else:
             self.albumId = None
-            self.playlistId = album.get("id") or album.get("playlist_id")
+            self.playlistId = album.get("id") or album.get("playlist_id") or album.get("album_id")
             self.id = f"{self.ownerId}_{self.playlistId}"
             self.url = VK + "music/playlist/" + self.id
 
@@ -254,6 +260,10 @@ class Track(_BaseModel):
         self.album = Album(album, client=self._client) if album else None
 
         self.licensed = track.get("is_licensed")
+        self.focus = track.get("is_focus_track")
+
+        self.shortsAllowed = track.get("short_videos_allowed")
+        self.storiesAllowed = track.get("stories_allowed")
 
         self.releaseTrack = None
         if not releaseTrack:
@@ -343,6 +353,9 @@ class Playlist(_BaseModel):
         plays = playlist.get("plays")
         self.plays = plays if plays else None
 
+        followers = playlist.get("followers")
+        self.followers = followers if followers else None
+
         createddAt = playlist.get("create_time")
         self.createdAt = unixToDatetime(createddAt) if createddAt else None
 
@@ -356,6 +369,9 @@ class Playlist(_BaseModel):
 
         original = playlist.get("original")
         self.original = Playlist(original, self._client) if original else None
+
+        tracksCount = playlist.get("count")
+        self.tracksCount = tracksCount if tracksCount else None
 
         tracks = playlist.get("tracks")
         self.tracks = tracks if tracks else None

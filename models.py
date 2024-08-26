@@ -176,13 +176,13 @@ class Album(_BaseModel):
         self.ownerId = album.get("owner_id")
         if not playlist:
             self.playlistId = None
-            self.albumId = album.get("id") or album.get("album_id") or album.get("playlist_id")
+            self.albumId = album.get("id") or album.get("album_id")
             self.id = f"{self.ownerId}_{self.albumId}"
             self.url = VK + "music/album/" + self.id
 
         else:
             self.albumId = None
-            self.playlistId = album.get("id") or album.get("playlist_id") or album.get("album_id")
+            self.playlistId = album.get("id") or album.get("playlist_id")
             self.id = f"{self.ownerId}_{self.playlistId}"
             self.url = VK + "music/playlist/" + self.id
 

@@ -134,10 +134,14 @@ class Get:
             return artist
 
         if includeAlbums:
-            artist["albums"] = responses[1].get("items")
+            albums = responses[1]
+
+            artist["albums"] = albums.get("items") if not isinstance(albums, Error) else albums
 
         if includeTracks:
-            artist["tracks"] = responses[2].get("items")
+            tracks = responses[2 if includeAlbums else 1]
+
+            artist["tracks"] = tracks.get("items") if not isinstance(tracks, Error) else tracks
 
         return self._finalizeResponse(artist, Artist)
 
@@ -158,7 +162,7 @@ class Get:
 
         return self._finalizeResponse((await self._VKReq("getRelatedArtistsById", {"artist_id": artistId, "count": limit})).get("artists"), Artist)
 
-    
+
     async def _getTracks(self, tracks: str, objectType: Union[Type[Union[Album, Playlist]], None] = None) -> Union[List[Track], Error]:
         tracks = re.sub(r"\\/", "/", re.sub(r"false", "False", re.sub(r"true", "True", tracks)))
         try:

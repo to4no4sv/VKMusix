@@ -52,7 +52,7 @@ class Artist(_BaseModel):
 
         photo = artist.get("photo")
         if photo:
-            photoDict = {f'{photo.get("width")}': re.sub(r"\.(j|jp|jpg)$", str(), photo.get("url")[:photo.get("url").rfind("&c_uniq_tag=")]) for photo in photo}
+            photoDict = {f'{photo.get("width")}': re.sub(r"\.(j|jp|jpg)$", str(), photo.get("url")[:photo.get("url").rfind("&c_uniq_tag=")][:photo.get("url").rfind("&type=")]) for photo in photo}
             self.photo = dict(sorted(photoDict.items(), key=lambda item: (int(item[0]))))
 
         else:
@@ -65,13 +65,13 @@ class Artist(_BaseModel):
         tracks = artist.get("tracks")
         self.tracks = [Track(track, self._client) for track in tracks] if tracks else None
 
-        if self.nickname not in ["Various Artists", "Various Artist"]:
-            self.id = artist.get("id") or artist.get("artist_id")
+        self.id = artist.get("id") or artist.get("artist_id")
+
+        if self.id:
             domain = artist.get("domain")
             self.url = VK + "artist/" + (domain if domain else self.id)
 
         else:
-            self.id = None
             self.url = None
 
 

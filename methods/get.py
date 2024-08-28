@@ -164,7 +164,8 @@ class Get:
 
 
     async def _getTracks(self, tracks: str, objectType: Union[Type[Union[Album, Playlist]], None] = None) -> Union[List[Track], Error]:
-        tracks = re.sub(r"\\/", "/", re.sub(r"false", "False", re.sub(r"true", "True", tracks)))
+        tracks = re.sub(r"\\/", "/", re.sub(r"false", "False", re.sub(r"true", "True", re.sub(r"null", "None", tracks))))
+        
         try:
             tracks = eval(tracks[tracks.rfind("[["): tracks.rfind("]]") + 2]) if objectType else list()
 

@@ -174,11 +174,17 @@ class Get:
 
         if isinstance(tracks, list):
             for index, track in enumerate(tracks):
+                if len(track) < 20:
+                    tracks[index] = None
+                    continue
+
                 album = track[19]
                 if album:
                     album.append(dict(zip(["photo_160", "photo_300"], track[14].split(",")[::-1])))
 
-                tracks[index] = Track({"owner_id": track[1], "track_id": track[0], "title": track[3], "artist": track[4], "subtitle": track[16], "main_artists": track[17], "featured_artists": track[18], "duration": track[5], "album": {"owner_id": album[0], "album_id": album[1], **({"photo": album[3]} if len(album) == 4 else dict())} if album else dict(), "release_audio_id": track[-2]}, self) if len(track) > 3 else None
+                tracks[index] = Track({"owner_id": track[1], "track_id": track[0], "title": track[3], "artist": track[4], "subtitle": track[16], "main_artists": track[17], "featured_artists": track[18], "duration": track[5], "album": {"owner_id": album[0], "album_id": album[1], **({"photo": album[3]} if len(album) == 4 else dict())} if album else dict(), "release_audio_id": track[-2]}, self)
+
+            tracks = [track for track in tracks if track]
 
             if not tracks or all(track is None for track in tracks):
                 tracks = None
@@ -461,7 +467,7 @@ class Get:
 
 
     @asyncFunction
-    async def getBroadcast(self, id: int = None, isGroup: bool = False) -> Union[Track, None, bool, Error]:
+    async def getBroadcast(self, id: int = None) -> Union[Track, None, bool, Error]:
         """
         Получает аудиотрек, транслируемый в статус.
 
@@ -473,17 +479,9 @@ class Get:
         result = client.getBroadcast(id=1)\n
         print(result)
 
-        Пример использования для группы:\n
-        result = client.getBroadcast(id=-215973356, isGroup=True)\n
-        print(result)
-
         :param id: идентификатор пользователя или группы, аудиотрек из статуса которого(ой) необходимо получить. (int, по умолчанию текущий пользователь)
-        :param isGroup: флаг, указывающий необходимо получить статус пользователя или группы (`True` для группы). (bool, по умолчанию `False`)
         :return: аудиотрек в виде объекта модели `Track`, `None` (если ничего не проигрывается), или `False` (если музыка не транслируется в статус, работает только для текущего пользователя).
         """
-
-        if isGroup and id:
-            id = id - (id * 2)
 
         broadcast = await self._VKReq("status.get", {"user_id": id} if id else None)
         if isinstance(broadcast, Error):
@@ -493,10 +491,9 @@ class Get:
         if audio:
             return Track(audio, self)
 
-        else:
-            if not id or id == (await self.getSelf()).get("id"):
-                isBroadcastEnabled = (await self._VKReq("getBroadcast")).get("enabled")
-                if not bool(isBroadcastEnabled):
-                    return False
+        if not id or id == (await self.getSelf()).get("id"):
+            isBroadcastEnabled = (await self._VKReq("getBroadcast")).get("enabled")
+            if not bool(isBroadcastEnabled):
+                return False
 
-            return None
+        return

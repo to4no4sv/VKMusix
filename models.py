@@ -12,6 +12,7 @@
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 #  GNU Lesser General Public License for more details.
+#  GNU Lesser General Public License for more details.
 #
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
@@ -165,8 +166,8 @@ class Album(_BaseModel):
         original = album.get("original")
         self.original = Album(original, client=self._client) if original else None
 
-        tracksCount = album.get("count")
-        self.tracksCount = tracksCount if tracksCount else None
+        trackCount = album.get("count")
+        self.trackCount = trackCount if trackCount else None
 
         tracks = album.get("tracks")
         self.tracks = tracks if tracks else None
@@ -370,8 +371,8 @@ class Playlist(_BaseModel):
         original = playlist.get("original")
         self.original = Playlist(original, self._client) if original else None
 
-        tracksCount = playlist.get("count")
-        self.tracksCount = tracksCount if tracksCount else None
+        trackCount = playlist.get("count")
+        self.trackCount = trackCount if trackCount else None
 
         tracks = playlist.get("tracks")
         self.tracks = tracks if tracks else None
@@ -405,8 +406,8 @@ class Playlist(_BaseModel):
 
 
     @asyncFunction
-    async def copy(self, groupId: int = None, newTitle: Union[str, None] = str(), newDescription: Union[str, None] = str(), newPhoto: Union[str, None] = str()) -> Union["Playlist", None, Error]:
-        return await self._client.copyPlaylist(self.playlistId, self.ownerId, groupId, newTitle, newDescription, newPhoto)
+    async def copy(self, groupId: int = None, chatId: int = None, newTitle: Union[str, None] = str(), newDescription: Union[str, None] = str(), newPhoto: Union[str, None] = str()) -> Union["Playlist", None, Error]:
+        return await self._client.copyPlaylist(self.playlistId, self.ownerId, groupId, chatId, newTitle, newDescription, newPhoto)
 
 
     @asyncFunction

@@ -305,6 +305,9 @@ class Get:
 
             playlists_ = await asyncio.gather(*tasks)
             for playlistGroup in playlists_:
+                if isinstance(playlistGroup, Error):
+                    continue
+
                 for playlist in playlistGroup.get("items"):
                     playlists.append(playlist)
 

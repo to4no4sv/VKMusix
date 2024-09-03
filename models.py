@@ -287,7 +287,7 @@ class Track(_BaseModel):
 
 
     @asyncFunction
-    async def download(self, filename: str = None, directory: str = os.getcwd()) -> Union[bool, Error]:
+    async def download(self, filename: str = None, directory: str = os.getcwd()) -> Union[str, None, Error]:
         return await self._client.download(filename=filename, directory=directory, track=self)
 
 

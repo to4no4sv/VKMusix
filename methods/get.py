@@ -17,6 +17,7 @@
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
 import asyncio
+import os
 
 import re
 
@@ -75,23 +76,24 @@ class Get:
 
 
     @asyncFunction
-    async def download(self, ownerId: int = None, trackId: int = None, filename: str = None, track: "Track" = None) -> Union[bool, Error]:
+    async def download(self, ownerId: int = None, trackId: int = None, filename: str = None, directory: str = os.getcwd(), track: "Track" = None) -> Union[bool, Error]:
         """
         Загружает аудиотрек в формате MP3.
 
         :param ownerId: идентификатор владельца аудиотрека (пользователь или группа). (int, необязательно)
         :param trackId: идентификатор аудиотрека, информацию о котором необходимо получить. (int, необязательно)
         :param filename: название файла с аудиотреком. (str, по умолчанию `{artist} -- {title}`)
+        :param directory: путь к директории, в которой сохранить файл. (str, по умолчанию `os.getcwd()`)
         :param track: объект класса `Track`, представляющий аудиотрек. (Track, необязательно)
         :return: `True`, если аудиотрек успешно загружен, иначе `False`.
         """
 
-        import subprocess
-        from Crypto.Cipher import AES
-        from Crypto.Util.Padding import pad
-        from os import path
+        import os
         import aiofiles
         import aiofiles.os
+        from Crypto.Cipher import AES
+        from Crypto.Util.Padding import pad
+        import av
 
         if not any((all((ownerId, trackId)), all((track, isinstance(track, Track))))):
             return False
@@ -104,11 +106,12 @@ class Get:
             if not track.fileUrl:
                 return False
 
-        filename = filename or f"{track.artist} -- {track.title}"
+        filename = (filename if not filename.endswith(".mp3") else filename[:-4]) or f"{track.artist} -- {track.title}.mp3"
+        filename = os.path.join(directory, filename)
 
         m3u8Content = await self._client.sendReq(track.fileUrl, responseType="code")
 
-        async def downloadSegment(segmentUrlLocal: str, keyLocal: str, ivLocal: bytes, segmentNameLocal: str) -> None:
+        async def downloadSegment(segmentUrlLocal: str, keyLocal: str, ivLocal: bytes) -> None:
             segmentData = await self._client.sendReq(segmentUrlLocal, responseType="file")
 
             if keyLocal:
@@ -119,15 +122,13 @@ class Get:
                 decryptedData = decryptor.decrypt(segmentData)
                 segmentData = decryptedData
 
-            async with aiofiles.open(segmentNameLocal, "wb") as f:
-                await f.write(segmentData)
+            return segmentData
 
         key = None
         iv = bytes.fromhex("00000000000000000000000000000000")
-        segmentFiles = list()
         tasks = list()
 
-        for line in m3u8Content.splitlines():
+        for idx, line in enumerate(m3u8Content.splitlines()):
             if line.startswith("#EXT-X-KEY"):
                 method = line.split("METHOD=")[1].split(",")[0]
 
@@ -143,24 +144,29 @@ class Get:
                     keyLocal = None
 
             elif line.endswith(".ts"):
-                segmentUrl = path.join(path.dirname(track.fileUrl), line)
-                task = asyncio.create_task(downloadSegment(str(segmentUrl), keyLocal, iv, line))
+                segmentUrl = os.path.join(os.path.dirname(track.fileUrl), line)
+                task = asyncio.create_task(downloadSegment(str(segmentUrl), keyLocal, iv))
                 tasks.append(task)
-                segmentFiles.append(line)
 
-        await asyncio.gather(*tasks)
+        segments = await asyncio.gather(*tasks)
 
         async with aiofiles.open(f"{filename}.ts", "wb") as outfile:
-            for fname in segmentFiles:
-                async with aiofiles.open(fname, "rb") as infile:
-                    await outfile.write(await infile.read())
+            for segment in segments:
+                await outfile.write(segment)
 
-        subprocess.run(["ffmpeg", "-i", f"{filename}.ts", "-c:a", "copy", f"{filename}.mp3"])
+        inputContainer = av.open(f"{filename}.ts")
+        outputContainer = av.open(f"{filename}.mp3", mode="w", format="mp3")
 
-        tasks = [aiofiles.os.remove(segmentName) for segmentName in segmentFiles]
-        tasks.append(aiofiles.os.remove(f"{filename}.ts"))
+        inputStream = inputContainer.streams.audio[0]
+        outputContainer.add_stream("mp3", rate=inputStream.rate)
 
-        await asyncio.gather(*tasks)
+        for packet in inputContainer.demux(inputStream):
+            outputContainer.mux(packet)
+
+        outputContainer.close()
+
+        await aiofiles.os.remove(f"{filename}.ts")
+
         return True
 
 

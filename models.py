@@ -16,6 +16,7 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import re
 import pytz
 from typing import Union, List, Tuple
@@ -286,8 +287,8 @@ class Track(_BaseModel):
 
 
     @asyncFunction
-    async def download(self, filename: str = None) -> Union[bool, Error]:
-        return await self._client.download(filename=filename, track=self)
+    async def download(self, filename: str = None, directory: str = os.getcwd()) -> Union[bool, Error]:
+        return await self._client.download(filename=filename, directory=directory, track=self)
 
 
     @asyncFunction

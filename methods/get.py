@@ -75,6 +75,96 @@ class Get:
 
 
     @asyncFunction
+    async def download(self, ownerId: int = None, trackId: int = None, filename: str = None, track: "Track" = None) -> Union[bool, Error]:
+        """
+        Загружает аудиотрек в формате MP3.
+
+        :param ownerId: идентификатор владельца аудиотрека (пользователь или группа). (int, необязательно)
+        :param trackId: идентификатор аудиотрека, информацию о котором необходимо получить. (int, необязательно)
+        :param filename: название файла с аудиотреком. (str, по умолчанию `{artist} -- {title}`)
+        :param track: объект класса `Track`, представляющий аудиотрек. (Track, необязательно)
+        :return: `True`, если аудиотрек успешно загружен, иначе `False`.
+        """
+
+        import subprocess
+        from Crypto.Cipher import AES
+        from Crypto.Util.Padding import pad
+        from os import path
+        import aiofiles
+        import aiofiles.os
+
+        if not any((all((ownerId, trackId)), all((track, isinstance(track, Track))))):
+            return False
+
+        if not track or not track.fileUrl:
+            track = await self.get(ownerId, trackId)
+            if isinstance(track, Error):
+                return track
+
+            if not track.fileUrl:
+                return False
+
+        filename = filename or f"{track.artist} -- {track.title}"
+
+        m3u8Content = await self._client.sendReq(track.fileUrl, responseType="code")
+
+        async def downloadSegment(segmentUrlLocal: str, keyLocal: str, ivLocal: bytes, segmentNameLocal: str) -> None:
+            segmentData = await self._client.sendReq(segmentUrlLocal, responseType="file")
+
+            if keyLocal:
+                if len(segmentData) % AES.block_size != 0:
+                    segmentData = pad(segmentData, AES.block_size)
+
+                decryptor = AES.new(keyLocal.encode("utf-8"), AES.MODE_CBC, ivLocal)
+                decryptedData = decryptor.decrypt(segmentData)
+                segmentData = decryptedData
+
+            async with aiofiles.open(segmentNameLocal, "wb") as f:
+                await f.write(segmentData)
+
+        key = None
+        iv = bytes.fromhex("00000000000000000000000000000000")
+        segmentFiles = list()
+        tasks = list()
+
+        for line in m3u8Content.splitlines():
+            if line.startswith("#EXT-X-KEY"):
+                method = line.split("METHOD=")[1].split(",")[0]
+
+                if method == "AES-128":
+                    if not key:
+                        keyUri = line.split('URI="')[1].split('"')[0]
+                        key = keyLocal = await self._client.sendReq(keyUri, responseType="code")
+
+                    else:
+                        keyLocal = key
+
+                elif method == "NONE":
+                    keyLocal = None
+
+            elif line.endswith(".ts"):
+                segmentUrl = path.join(path.dirname(track.fileUrl), line)
+                task = asyncio.create_task(downloadSegment(str(segmentUrl), keyLocal, iv, line))
+                tasks.append(task)
+                segmentFiles.append(line)
+
+        await asyncio.gather(*tasks)
+
+        async with aiofiles.open(f"{filename}.ts", "wb") as outfile:
+            for fname in segmentFiles:
+                async with aiofiles.open(fname, "rb") as infile:
+                    await outfile.write(await infile.read())
+
+        subprocess.run(["ffmpeg", "-i", f"{filename}.ts", "-c:a", "copy", f"{filename}.mp3"])
+
+        tasks = [aiofiles.os.remove(segmentName) for segmentName in segmentFiles]
+        tasks.append(aiofiles.os.remove(f"{filename}.ts"))
+
+        await asyncio.gather(*tasks)
+        return True
+
+
+    @asyncFunction
     async def getTracks(self, groupId: int = None) -> Union[List[Track], Track, None, Error]:
         """
         Получает треки пользователя или группы по его (её) идентификатору. (Временно не работает)

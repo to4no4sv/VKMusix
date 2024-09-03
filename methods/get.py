@@ -106,7 +106,7 @@ class Get:
             if not track.fileUrl:
                 return False
 
-        filename = (filename if not filename.endswith(".mp3") else filename[:-4]) or f"{track.artist} -- {track.title}"
+        filename = (filename if not filename.endswith(".mp3") else filename[:-4]) if filename else f"{track.artist} -- {track.title}"
         filename = os.path.join(directory, filename)
 
         m3u8Content = await self._client.sendReq(track.fileUrl, responseType="code")

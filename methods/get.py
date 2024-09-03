@@ -76,16 +76,16 @@ class Get:
 
 
     @asyncFunction
-    async def download(self, ownerId: int = None, trackId: int = None, filename: str = None, directory: str = os.getcwd(), track: "Track" = None) -> Union[bool, Error]:
+    async def download(self, ownerId: int = None, trackId: int = None, filename: str = None, directory: str = os.getcwd(), track: "Track" = None) -> Union[str, None, Error]:
         """
         Загружает аудиотрек в формате MP3.
 
         :param ownerId: идентификатор владельца аудиотрека (пользователь или группа). (int, необязательно)
         :param trackId: идентификатор аудиотрека, информацию о котором необходимо получить. (int, необязательно)
         :param filename: название файла с аудиотреком. (str, по умолчанию `{artist} -- {title}`)
-        :param directory: путь к директории, в которой сохранить файл. (str, по умолчанию `os.getcwd()`)
+        :param directory: путь к директории, в которую загрузить файл. (str, по умолчанию `os.getcwd()`)
         :param track: объект класса `Track`, представляющий аудиотрек. (Track, необязательно)
-        :return: `True`, если аудиотрек успешно загружен, иначе `False`.
+        :return: полный путь к загруженному файлу, если аудиотрек успешно загружен, иначе `None`.
         """
 
         import os
@@ -96,7 +96,7 @@ class Get:
         import av
 
         if not any((all((ownerId, trackId)), all((track, isinstance(track, Track))))):
-            return False
+            return
 
         if not track or not track.fileUrl:
             track = await self.get(ownerId, trackId)
@@ -104,7 +104,7 @@ class Get:
                 return track
 
             if not track.fileUrl:
-                return False
+                return
 
         filename = (filename if not filename.endswith(".mp3") else filename[:-4]) if filename else f"{track.artist} -- {track.title}"
         filename = os.path.join(directory, filename)
@@ -168,7 +168,7 @@ class Get:
 
         await aiofiles.os.remove(f"{filename}.ts")
 
-        return True
+        return f"{filename}.mp3"
 
 
     @asyncFunction

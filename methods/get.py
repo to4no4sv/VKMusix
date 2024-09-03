@@ -128,7 +128,7 @@ class Get:
         iv = bytes.fromhex("00000000000000000000000000000000")
         tasks = list()
 
-        for idx, line in enumerate(m3u8Content.splitlines()):
+        for line in m3u8Content.splitlines():
             if line.startswith("#EXT-X-KEY"):
                 method = line.split("METHOD=")[1].split(",")[0]
 

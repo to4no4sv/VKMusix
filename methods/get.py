@@ -163,6 +163,7 @@ class Get:
         for packet in inputContainer.demux(inputStream):
             outputContainer.mux(packet)
 
+        inputContainer.close()
         outputContainer.close()
 
         await aiofiles.os.remove(f"{filename}.ts")

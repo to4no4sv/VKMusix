@@ -12,7 +12,6 @@
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 #  GNU Lesser General Public License for more details.
-#  GNU Lesser General Public License for more details.
 #
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
@@ -206,7 +205,7 @@ class Track(_BaseModel):
         genre (Genre, optional): жанр аудиотрека, представленный объектом класса `Genre`.\n
         explicit (bool, optional): флаг, указывающий, есть ли в треке ненормативная лексика.\n
         duration (int): продолжительность аудиотрека в секундах.\n
-        fileUrl (str, optional): ссылка на MP3-файл.\n
+        fileUrl (str, optional): ссылка на m3u8-файл.\n
         lyrics (str, optional): текст аудиотрека.\n
         hasLyrics (bool, optional): флаг, указывающий, имеет ли аудиотрек текст.\n
         uploadedAt (datetime, optional): дата и время загрузки аудиотрека (UTC +03:00).\n
@@ -284,6 +283,11 @@ class Track(_BaseModel):
     @asyncFunction
     async def get(self, includeLyrics: bool = False) -> Union["Track", Error]:
         return await self._client.get(self.ownerId, self.trackId, includeLyrics)
+
+
+    @asyncFunction
+    async def download(self, filename: str = None) -> Union[bool, Error]:
+        return await self._client.download(filename=filename, track=self)
 
 
     @asyncFunction

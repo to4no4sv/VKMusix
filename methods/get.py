@@ -163,19 +163,24 @@ class Get:
             for segment in segments:
                 await outfile.write(segment)
 
-        inputContainer = av.open(f"{filename}.ts")
-        outputContainer = av.open(f"{filename}.mp3", mode="w", format="mp3")
+        try:
+            inputContainer = av.open(f"{filename}.ts")
+            outputContainer = av.open(f"{filename}.mp3", mode="w", format="mp3")
 
-        inputStream = inputContainer.streams.audio[0]
-        outputContainer.add_stream("mp3", rate=inputStream.rate)
+            inputStream = inputContainer.streams.audio[0]
+            outputContainer.add_stream("mp3", rate=inputStream.rate)
 
-        for packet in inputContainer.demux(inputStream):
-            outputContainer.mux(packet)
+            for packet in inputContainer.demux(inputStream):
+                outputContainer.mux(packet)
 
-        inputContainer.close()
-        outputContainer.close()
+            inputContainer.close()
+            outputContainer.close()
 
-        await aiofiles.os.remove(f"{filename}.ts")
+        except av.InvalidDataError:
+            return
+
+        finally:
+            await aiofiles.os.remove(f"{filename}.ts")
 
         return f"{filename}.mp3"
 

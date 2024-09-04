@@ -23,7 +23,7 @@ class Client(Utils, Search, Get, Update):
     Класс для взаимодействия с VK Music.
 
     Аргументы:
-        VKToken (str, optional): Токен доступа к ВКонтакте API.\n
+        token (str, optional): Токен доступа к ВКонтакте API.\n
         RuCaptchaKey (str, optional): Ключ для решения капчи через сервис RuCaptcha. Если не указан, капча может потребовать ручного решения.\n
         errorsLanguage (str, optional): Язык ошибок (например, `ru` для русского, `en` для английского). Если не указан, используются оба языка.\n
         proxies (dict, optional): прокси, которые будут использоваться при запросах. Формат {"протокол": "логин:пароль@IP:порт"}\n
@@ -32,15 +32,15 @@ class Client(Utils, Search, Get, Update):
         cookieFilename (str, optional): Название файла c cookie. По умолчанию введённый логин.
 
     Пример использования:
-        client = Client(VKToken="yourVKToken", RuCaptchaKey="yourRuCaptchaKey", errorsLanguage="ru", proxies={"http": "proxyLogin:proxyPassword@proxyIP:proxyPort", "socks5": "proxyLogin:proxyPassword@proxyIP:proxyPort"}, login="admin@vkmusix.ru", password="vkmusix.ru", cookieFilename="admin")
+        client = Client(token="yourToken", RuCaptchaKey="yourRuCaptchaKey", errorsLanguage="ru", proxies={"http": "proxyLogin:proxyPassword@proxyIP:proxyPort", "socks5": "proxyLogin:proxyPassword@proxyIP:proxyPort"}, login="admin@vkmusix.ru", password="vkmusix.ru", cookieFilename="admin")
         result = client.searchArtists("prombl")
         print(result)
     """
 
 
-    def __init__(self, VKToken: str = None, RuCaptchaKey: str = None, errorsLanguage: str = None, proxies: dict = None, login: str = None, password: str = None, cookieFilename: str = None) -> None:
-        if not VKToken:
-            VKToken = input("Получите токен ВКонтакте с правами на аудиозаписи и доступ в любое время на сайте `https://vkhost.github.io/` (приложение VK Admin) и отправьте его: ")
+    def __init__(self, token: str = None, RuCaptchaKey: str = None, errorsLanguage: str = None, proxies: dict = None, login: str = None, password: str = None, cookieFilename: str = None) -> None:
+        if not token:
+            token = input("Получите токен ВКонтакте с правами на аудиозаписи и доступ в любое время на сайте `https://vkhost.github.io/` (приложение VK Admin) и отправьте его: ")
 
         self._RuCaptchaKey = RuCaptchaKey
         self._errorsLanguage = errorsLanguage.lower() if errorsLanguage and isinstance(errorsLanguage, str) and errorsLanguage.lower() in ["ru", "en"] else None
@@ -99,12 +99,35 @@ class Client(Utils, Search, Get, Update):
         self._clientSession = httpx.AsyncClient(proxies=self._proxies)
         self._client = WebClient(self._clientSession)
 
-        self._defaultParams = {"access_token": VKToken, "v": VKAPIVersion}
+        self._defaultParams = {"access_token": token, "v": VKAPIVersion}
         self._closed = False
 
+        try:
+            asyncio.get_running_loop()
+
+        except RuntimeError:
+            from .version import __version__
+            from packaging import version
+
+            latestVersion = self._client.sendReq("https://pypi.org/pypi/vkmusix/json").get("info").get("version")
+
+            if version.parse(latestVersion) > version.parse(__version__):
+                ruWarning = f"Внимание: Доступна новая версия библиотеки {latestVersion} (https://pypi.org/project/vkmusix). Вы используете версию {__version__}."
+                enWarning = f"Attention: A new version of the library {latestVersion} (https://pypi.org/project/vkmusix) is available. You are using version {__version__}."
+
+                from warnings import warn
+                warn(
+                    (ruWarning if self._errorsLanguage == "ru" else enWarning if self._errorsLanguage == "en" else "🇷🇺: " + ruWarning + " 🇬🇧: " + enWarning).format(str(sys.version_info.major) + "." + str(sys.version_info.minor)),
+                    UserWarning
+                )
+
+
+    async def checkUpdates(self) -> None:
         from .version import __version__
         from packaging import version
-        latestVersion = self._client.sendReq("https://pypi.org/pypi/vkmusix/json").get("info").get("version")
+
+        latestVersion = await self._client.sendReq("https://pypi.org/pypi/vkmusix/json").get("info").get("version")
+
         if version.parse(latestVersion) > version.parse(__version__):
             ruWarning = f"Внимание: Доступна новая версия библиотеки {latestVersion} (https://pypi.org/project/vkmusix). Вы используете версию {__version__}."
             enWarning = f"Attention: A new version of the library {latestVersion} (https://pypi.org/project/vkmusix) is available. You are using version {__version__}."
@@ -120,7 +143,7 @@ class Client(Utils, Search, Get, Update):
         return self
 
 
-    def __aenter__(self) -> "Client":
+    async def __aenter__(self) -> "Client":
         return self
 
 
@@ -128,8 +151,8 @@ class Client(Utils, Search, Get, Update):
         self.close()
 
 
-    def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
-        self.close()
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+        await self.close()
 
 
     @asyncFunction

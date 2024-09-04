@@ -99,14 +99,23 @@ class Get:
             return
 
         if not track or not track.fileUrl:
-            track = await self.get(ownerId, trackId)
+            if not track:
+                track = await self.get(ownerId, trackId)
+
+            else:
+                track = await self.get(track.ownerId, track.trackId)
+
             if isinstance(track, Error):
                 return track
 
             if not track.fileUrl:
                 return
 
+        if directory:
+            os.makedirs(directory, exist_ok=True)
+
         filename = (filename if not filename.endswith(".mp3") else filename[:-4]) if filename else f"{track.artist} -- {track.title}"
+        filename = re.sub(r'[<>:"/\\|?*]', str(), filename)
         filename = os.path.join(directory, filename)
 
         m3u8Content = await self._client.sendReq(track.fileUrl, responseType="code")

@@ -119,7 +119,6 @@ class Get:
         filename = os.path.join(directory, filename)
 
         m3u8Content = await self._client.sendReq(track.fileUrl, responseType="code")
-        #print(m3u8Content)
 
         async def downloadSegment(segmentUrlLocal: str, keyLocal: str, ivLocal: bytes) -> None:
             segmentData = await self._client.sendReq(segmentUrlLocal, responseType="file")

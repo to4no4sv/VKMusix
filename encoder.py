@@ -21,9 +21,9 @@ from datetime import datetime
 from types import FunctionType, MethodType
 
 
-class _CustomEncoder(json.JSONEncoder):
+class CustomEncoder(json.JSONEncoder):
     def default(self, o) -> any:
-        if isinstance(o, _BaseModel):
+        if isinstance(o, BaseModel):
             return o.toDict()
 
         elif isinstance(o, datetime):
@@ -35,7 +35,7 @@ class _CustomEncoder(json.JSONEncoder):
         return super().default(o)
 
 
-class _BaseModel:
+class BaseModel:
     def __init__(self, client: "Client" = None) -> None:
         self._client = client
 
@@ -50,4 +50,4 @@ class _BaseModel:
         return result
 
     def __repr__(self) -> any:
-        return json.dumps(self.toDict(), indent=4, ensure_ascii=False, cls=_CustomEncoder)
+        return json.dumps(self.toDict(), indent=4, ensure_ascii=False, cls=CustomEncoder)

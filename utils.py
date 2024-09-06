@@ -21,7 +21,6 @@ import platform
 
 from typing import Union
 
-
 def addHTTPsToUrl(url: str) -> str:
     if not ("https://" in url or "http://" in url):
         url = "https://" + url

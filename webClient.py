@@ -21,15 +21,16 @@ import asyncio
 
 import httpx
 
-from typing import Union
-
 from .aio import asyncFunction
-from .config import retries, timeout, sleepTime
 from .utils import addHTTPsToUrl
+
+retries = 5
+timeout = 20
+sleepTime = .25
 
 
 class Client:
-    def __init__(self, client: Union[httpx.Client, httpx.AsyncClient]) -> None:
+    def __init__(self, client: httpx.AsyncClient) -> None:
         self.client = client
 
     @asyncFunction
@@ -47,7 +48,7 @@ class Client:
 
         while retriesLocal > 0:
             try:
-                request = await self.client.request(
+                response = await self.client.request(
                     method,
                     url,
                     params=params if method == "GET" else None,
@@ -61,21 +62,21 @@ class Client:
                 )
 
                 if responseType == "json":
-                    responseJson = request.json()
+                    responseJson = response.json()
                     if "response" in responseJson:
                         responseJson = responseJson.get("response")
 
                     return responseJson
 
                 elif responseType == "code":
-                    responseText = request.text
+                    responseText = response.text
                     return re.sub(r"<br/>", "\n", responseText)
 
                 elif responseType == "file":
-                    return request.content
+                    return response.content
 
-                elif responseType == "request":
-                    return request
+                elif responseType == "response":
+                    return response
 
 
             except httpx.RequestError:

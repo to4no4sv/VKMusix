@@ -119,6 +119,7 @@ class Get:
         filename = os.path.join(directory, filename)
 
         m3u8Content = await self._client.sendReq(track.fileUrl, responseType="code")
+        #print(m3u8Content)
 
         async def downloadSegment(segmentUrlLocal: str, keyLocal: str, ivLocal: bytes) -> None:
             segmentData = await self._client.sendReq(segmentUrlLocal, responseType="file")
@@ -127,7 +128,7 @@ class Get:
                 if len(segmentData) % AES.block_size != 0:
                     segmentData = pad(segmentData, AES.block_size)
 
-                decryptor = AES.new(keyLocal.encode("utf-8"), AES.MODE_CBC, ivLocal)
+                decryptor = AES.new(keyLocal, AES.MODE_CBC, ivLocal)
                 decryptedData = decryptor.decrypt(segmentData)
                 segmentData = decryptedData
 
@@ -144,15 +145,15 @@ class Get:
                 if method == "AES-128":
                     if not key:
                         keyUri = line.split('URI="')[1].split('"')[0]
-                        key = keyLocal = await self._client.sendReq(keyUri, responseType="code")
+                        response = await self._client.sendReq(keyUri, responseType="response")
+                        key = response.content if response.headers.get("content-type") else response.text.encode()
 
-                    else:
-                        keyLocal = key
+                    keyLocal = key
 
                 elif method == "NONE":
                     keyLocal = None
 
-            elif line.endswith(".ts"):
+            elif line.endswith((".ts", ".ts?siren=1")):
                 segmentUrl = os.path.join(os.path.dirname(track.fileUrl), line)
                 task = asyncio.create_task(downloadSegment(str(segmentUrl), keyLocal, iv))
                 tasks.append(task)
@@ -160,8 +161,16 @@ class Get:
         segments = await asyncio.gather(*tasks)
 
         async with aiofiles.open(f"{filename}.ts", "wb") as outfile:
+            buffer = bytearray()
             for segment in segments:
-                await outfile.write(segment)
+                buffer.extend(segment)
+
+                if len(buffer) > 10 * 1024 * 1024:
+                    await outfile.write(buffer)
+                    buffer.clear()
+
+            if buffer:
+                await outfile.write(buffer)
 
         try:
             inputContainer = av.open(f"{filename}.ts")

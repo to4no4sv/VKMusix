@@ -16,7 +16,7 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
-from .encoder import _BaseModel
+from .encoder import BaseModel
 
 
 errorsDict = {
@@ -29,7 +29,7 @@ errorsDict = {
 
     "VKInvalidToken": ("Недействительный токен ВКонтакте.", "Invalid VKontakte token.", True),
     "VKCookieFileNotFound": ("Файл с расширением .VKCookie не найден. Если он ещё не создан, введите логин и пароль от аккаунта.", "The file with the .VKCookie extension was not found. If it hasn't been created yet, please enter the login and password for the account.", True),
-    "VKInvalidCookie": ("В файле с расширением .VKCookie были недействительные cookie. Пожалуйста, перезапустите Ваш код.", "The file with the .VKCookie extension contained invalid cookies. Please restart your code.", True),
+        "VKInvalidCookie": ("В файле с расширением .VKCookie были недействительные cookie. Пожалуйста, перезапустите Ваш код.", "The file with the .VKCookie extension contained invalid cookies. Please restart your code.", True),
     "VKUnsuccessfulLoginAttempt": ("Неудачная попытка входа в ВКонтакте. Проверьте введённые `login` и (или) `password`.", "Unsuccessful login attempt on VKontakte. Please check the entered `login` and/or `password`.", True),
 
     "RuCaptchaInvalidKey": ("Недействительный ключ RuCaptcha.", "Invalid RuCaptcha key.", True),
@@ -85,7 +85,7 @@ for errorCode, (errorName, errorText) in enumerate(errorsDict.items()):
     )
 
 
-class Error(_BaseModel):
+class Error(BaseModel):
     def __init__(self, code: int, title: str, message: str) -> None:
         super().__init__()
         self._code = code

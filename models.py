@@ -25,7 +25,7 @@ from datetime import datetime
 from .aio import asyncFunction
 from .errors import Error
 from .config import VK, moscowTz
-from .encoder import _BaseModel
+from .encoder import BaseModel
 
 
 def unixToDatetime(seconds: int) -> datetime:
@@ -33,7 +33,7 @@ def unixToDatetime(seconds: int) -> datetime:
     return UTC.replace(tzinfo=pytz.utc).astimezone(moscowTz)
 
 
-class Artist(_BaseModel):
+class Artist(BaseModel):
     """
     Класс, представляющий артиста.
 
@@ -96,7 +96,7 @@ class Artist(_BaseModel):
         return await self._client.unfollowArtist(self.id)
 
 
-class Album(_BaseModel):
+class Album(BaseModel):
     """
     Класс, представляющий альбом.
 
@@ -193,7 +193,7 @@ class Album(_BaseModel):
         return await self._client.getAlbum(self.ownerId, self.albumId or self.playlistId, includeTracks)
 
 
-class Track(_BaseModel):
+class Track(BaseModel):
     """
     Класс, представляющий аудиотрек.
 
@@ -326,7 +326,7 @@ class Track(_BaseModel):
         return await self._client.setBroadcast(self.ownerId, self.trackId, groupIds)
 
 
-class Playlist(_BaseModel):
+class Playlist(BaseModel):
     """
     Класс, представляющий плейлист.
 
@@ -450,7 +450,7 @@ trackGenres = {
 }
 
 
-class Genre(_BaseModel):
+class Genre(BaseModel):
     """
     Класс, представляющий жанр аудиотрека или альбома.
 

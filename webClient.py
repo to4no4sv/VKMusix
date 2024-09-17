@@ -34,7 +34,7 @@ class Client:
         self.client = client
 
     @asyncFunction
-    async def sendRequest(self, url: str, params: dict = None, json: dict = None, cookies: dict = None, headers: dict = None, files: dict = None, responseType: str = "json", method: str = "GET") -> any:
+    async def request(self, url: str, params: dict = None, json: dict = None, cookies: dict = None, headers: dict = None, files: dict = None, responseType: str = "json", method: str = "GET") -> any:
         responseType = responseType.lower()
         retriesLocal = retries
 
@@ -90,4 +90,4 @@ class Client:
             except Exception as e:
                 print(e)
 
-    sendReq = sendRequest
+    req = request

@@ -60,7 +60,7 @@ class Client(Utils, Search, Get, Update):
 
                 proxyURL = proxies.get(scheme)
                 scheme = scheme.lower() + ("://" if not scheme.endswith("://") else str())
-                newProxies[scheme] = (scheme if scheme not in proxyURL else str()) + proxyURL
+                newProxies[scheme] = (scheme if "://" not in proxyURL else str()) + proxyURL
 
             self._proxies = newProxies
 
@@ -109,7 +109,7 @@ class Client(Utils, Search, Get, Update):
             from .version import __version__
             from packaging import version
 
-            latestVersion = self._client.sendReq("https://pypi.org/pypi/vkmusix/json").get("info").get("version")
+            latestVersion = self._client.req("https://pypi.org/pypi/vkmusix/json").get("info").get("version")
 
             if version.parse(latestVersion) > version.parse(__version__):
                 ruWarning = f"Внимание: Доступна новая версия библиотеки {latestVersion} (https://pypi.org/project/vkmusix). Вы используете версию {__version__}."
@@ -117,7 +117,7 @@ class Client(Utils, Search, Get, Update):
 
                 from warnings import warn
                 warn(
-                    (ruWarning if self._errorsLanguage == "ru" else enWarning if self._errorsLanguage == "en" else "🇷🇺: " + ruWarning + " 🇬🇧: " + enWarning).format(str(sys.version_info.major) + "." + str(sys.version_info.minor)),
+                    ruWarning if self._errorsLanguage == "ru" else enWarning if self._errorsLanguage == "en" else "🇷🇺: " + ruWarning + " 🇬🇧: " + enWarning,
                     UserWarning
                 )
 
@@ -126,7 +126,7 @@ class Client(Utils, Search, Get, Update):
         from .version import __version__
         from packaging import version
 
-        latestVersion = await self._client.sendReq("https://pypi.org/pypi/vkmusix/json").get("info").get("version")
+        latestVersion = await self._client.req("https://pypi.org/pypi/vkmusix/json").get("info").get("version")
 
         if version.parse(latestVersion) > version.parse(__version__):
             ruWarning = f"Внимание: Доступна новая версия библиотеки {latestVersion} (https://pypi.org/project/vkmusix). Вы используете версию {__version__}."
@@ -134,7 +134,7 @@ class Client(Utils, Search, Get, Update):
 
             from warnings import warn
             warn(
-                (ruWarning if self._errorsLanguage == "ru" else enWarning if self._errorsLanguage == "en" else "🇷🇺: " + ruWarning + " 🇬🇧: " + enWarning).format(str(sys.version_info.major) + "." + str(sys.version_info.minor)),
+                ruWarning if self._errorsLanguage == "ru" else enWarning if self._errorsLanguage == "en" else "🇷🇺: " + ruWarning + " 🇬🇧: " + enWarning,
                 UserWarning
             )
 
@@ -165,7 +165,7 @@ class Client(Utils, Search, Get, Update):
         await self._clientSession.aclose()
 
 
-    async def _VKReq(self, method: str, params: dict = None, HTTPMethod: str = "GET") -> Union[dict, None]:
+    async def _req(self, method: str, params: dict = None, HTTPMethod: str = "GET") -> Union[dict, None]:
         if self._closed:
             self._raiseError("sessionClosed")
 
@@ -175,9 +175,8 @@ class Client(Utils, Search, Get, Update):
         else:
             limit = params.get("count")
 
-            if limit:
-                if limit < 0:
-                    params["count"] = 300
+            if limit and limit < 0:
+                params["count"] = 300
 
         if "." not in method:
             method = "audio." + method
@@ -185,7 +184,7 @@ class Client(Utils, Search, Get, Update):
         url = VKAPI + method
         fullParams = {**params, **self._defaultParams}
 
-        req = await self._client.sendReq(url, fullParams, method=HTTPMethod)
+        req = await self._client.req(url, fullParams, method=HTTPMethod)
 
         while isinstance(req, dict) and req.get("error"):
             error = req.get("error")
@@ -213,7 +212,7 @@ class Client(Utils, Search, Get, Update):
 
                 fullParams.update({"captcha_sid": error.get("captcha_sid"), "captcha_key": solve})
 
-                req = await self._client.sendReq(url, fullParams)
+                req = await self._client.req(url, fullParams)
 
             elif errorCode in [15, 201, 203]:
                 if ": can not restore too late" in error.get("error_msg"):
@@ -238,7 +237,7 @@ class Client(Utils, Search, Get, Update):
 
 
     async def _solveCaptcha(self, captchaImg: str) -> str:
-        imageBytes = await self._client.sendReq(captchaImg, responseType="file")
+        imageBytes = await self._client.req(captchaImg, responseType="file")
         captchaImageInBase64 = base64.b64encode(imageBytes).decode("utf-8")
 
         RuCaptchaParams = {
@@ -250,11 +249,11 @@ class Client(Utils, Search, Get, Update):
             "languagePool": "rn"
         }
 
-        taskId = (await self._client.sendReq(RuCaptchaAPI + "createTask", json=RuCaptchaParams, method="POST")).get("taskId")
+        taskId = (await self._client.req(RuCaptchaAPI + "createTask", json=RuCaptchaParams, method="POST")).get("taskId")
 
         while True:
             await asyncio.sleep(5)
-            taskResult = await self._client.sendReq(RuCaptchaAPI + "getTaskResult", json={"clientKey": self._RuCaptchaKey, "taskId": taskId}, method="POST")
+            taskResult = await self._client.req(RuCaptchaAPI + "getTaskResult", json={"clientKey": self._RuCaptchaKey, "taskId": taskId}, method="POST")
             errorId = taskResult.get("errorId")
 
             if errorId == 0 and taskResult.get("status") == "ready":
@@ -267,7 +266,7 @@ class Client(Utils, Search, Get, Update):
                 self._raiseError("RuCaptchaZeroBalance")
 
             elif errorId == 12:
-                taskId = (await self._client.sendReq(RuCaptchaAPI + "createTask", json=RuCaptchaParams, method="POST")).get("taskId")
+                taskId = (await self._client.req(RuCaptchaAPI + "createTask", json=RuCaptchaParams, method="POST")).get("taskId")
 
             elif errorId == 21:
                 self._raiseError("RuCaptchaBannedIP")

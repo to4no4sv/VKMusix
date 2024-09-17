@@ -123,7 +123,7 @@ class Search:
             return self._raiseError("noneQuery")
 
         params = {"q": query, "count": limit, "offset": offset}
-        response = await self._VKReq(method, params)
+        response = await self._req(method, params)
 
         if not isinstance(response, dict):
             return

@@ -67,20 +67,20 @@ class Update:
         if fileSizeInMB > 200:
             return self._raiseError("MP3FileTooBig")
 
-        uploadUrl = (await self._VKReq("getUploadServer")).get("upload_url")
+        uploadUrl = (await self._req("getUploadServer")).get("upload_url")
         if isinstance(uploadUrl, Error):
             return uploadUrl
 
         async with aiofiles.open(filename, "rb") as file:
             fileContent = await file.read()
 
-        uploadingFileResponse = await self._client.sendReq(uploadUrl, files={"file": (filename, fileContent, "audio/mpeg")}, method="POST")
+        uploadingFileResponse = await self._client.req(uploadUrl, files={"file": (filename, fileContent, "audio/mpeg")}, method="POST")
 
         server = uploadingFileResponse.get("server")
         audio = uploadingFileResponse.get("audio")
         hash = uploadingFileResponse.get("hash")
 
-        track = await self._VKReq("save", {"server": server, "audio": audio, "hash": hash, "title": title, "artist": artist})
+        track = await self._req("save", {"server": server, "audio": audio, "hash": hash, "title": title, "artist": artist})
         if isinstance(track, Error):
             return track
 
@@ -134,7 +134,7 @@ class Update:
 
         results = []
         for ownerId, trackId in zip(ownerIds, trackIds):
-            response = await self._VKReq(method, {**({"owner_id": ownerId, "audio_id": trackId, "group_id": groupId} if not playlistId else {"owner_id": groupId, "audio_ids": f"{ownerId}_{trackId}"}), "playlist_id": playlistId})
+            response = await self._req(method, {**({"owner_id": ownerId, "audio_id": trackId, "group_id": groupId} if not playlistId else {"owner_id": groupId, "audio_ids": f"{ownerId}_{trackId}"}), "playlist_id": playlistId})
             results.append(bool(response) if not isinstance(response, Error) else self._raiseError("playlistNotFound"))
 
         return tuple(results)
@@ -222,7 +222,7 @@ class Update:
 
             async def removeTrackFromPlaylist(id: str, semaphore: asyncio.Semaphore) -> bool:
                 async with semaphore:
-                    response = await self._VKReq("removeFromPlaylist", {"audio_ids": id, "owner_id": groupId, "playlist_id": playlistId})
+                    response = await self._req("removeFromPlaylist", {"audio_ids": id, "owner_id": groupId, "playlist_id": playlistId})
                     return bool(response) if not isinstance(response, Error) else response
 
             tasks = [removeTrackFromPlaylist(f"{ownerId}_{trackId}", deleteSemaphore) for ownerId, trackId in zip(ownerIds, trackIds)]
@@ -230,7 +230,7 @@ class Update:
         else:
             async def removeTrack(ownerId: int, trackId: int, semaphore: asyncio.Semaphore) -> bool:
                 async with semaphore:
-                    response = await self._VKReq("delete", {"owner_id": ownerId, "audio_id": trackId, "group_id": groupId})
+                    response = await self._req("delete", {"owner_id": ownerId, "audio_id": trackId, "group_id": groupId})
                     return bool(response) if not isinstance(response, Error) else response
 
             tasks = [removeTrack(ownerId, trackId, deleteSemaphore) for ownerId, trackId in zip(ownerIds, trackIds)]
@@ -260,7 +260,7 @@ class Update:
         if not any((title, artist, lyrics is not None, genreId is not None, removeFromSearchResults is not None)):
             return False
 
-        response = await self._VKReq("edit", {"owner_id": ownerId, "audio_id": trackId,
+        response = await self._req("edit", {"owner_id": ownerId, "audio_id": trackId,
             **({"title": title} if title else {}),
             **({"artist": artist} if artist else {}),
             **({"lyrics": lyrics} if lyrics is not None else {}),
@@ -285,7 +285,7 @@ class Update:
         :return: `True`, если аудиотрек успешно восстановлен, `False` в противном случае.
         """
 
-        response = await self._VKReq("restore", {"owner_id": ownerId, "audio_id": trackId})
+        response = await self._req("restore", {"owner_id": ownerId, "audio_id": trackId})
 
         return bool(response) if not isinstance(response, Error) else response
 
@@ -310,7 +310,7 @@ class Update:
         if not groupId:
             groupId = (await self.getSelf()).get("id")
 
-        playlist = await self._VKReq("createPlaylist" if not chatId else "createChatPlaylist", {"title": title, "description": description, "owner_id": groupId})
+        playlist = await self._req("createPlaylist" if not chatId else "createChatPlaylist", {"title": title, "description": description, "owner_id": groupId})
         if isinstance(playlist, Error):
             return playlist
 
@@ -345,7 +345,7 @@ class Update:
 
             ownerId = (await self.getSelf()).get("id")
 
-        response = await self._VKReq("followPlaylist", {"owner_id": ownerId, "playlist_id": playlistId, **({"group_id": groupId} if groupId else {})})
+        response = await self._req("followPlaylist", {"owner_id": ownerId, "playlist_id": playlistId, **({"group_id": groupId} if groupId else {})})
         return response.get("id") if not isinstance(response, Error) else response
 
 
@@ -366,7 +366,7 @@ class Update:
         if not groupId:
             groupId = (await self.getSelf()).get("id")
 
-        response = await self._VKReq("deletePlaylist", {"owner_id": groupId, "playlist_id": playlistId})
+        response = await self._req("deletePlaylist", {"owner_id": groupId, "playlist_id": playlistId})
         return bool(response) if not isinstance(response, Error) else (response if response._code != 17 else self._raiseError("playlistNotFound"))
 
 
@@ -385,7 +385,7 @@ class Update:
         else:
             method = "deletePlaylistCoverPhoto"
 
-        response = await self._VKReq(method, params)
+        response = await self._req(method, params)
         return bool(response) if not isinstance(response, Error) else response
 
 
@@ -424,7 +424,7 @@ class Update:
 
         else:
             if any(("title" in params, "description" in params)):
-                response = await self._VKReq("editPlaylist", params)
+                response = await self._req("editPlaylist", params)
                 editInfoStatus = bool(response) if not isinstance(response, Error) else response
 
             else:
@@ -514,7 +514,7 @@ class Update:
         if all((beforeTrackId, afterTrackId)):
             return self._raiseError("trackReorderNeedsOnlyBeforeOrAfterNotBoth")
 
-        response = await self._VKReq("reorder", {"audio_id": trackId, **({"before": beforeTrackId} if beforeTrackId else {"after": afterTrackId})})
+        response = await self._req("reorder", {"audio_id": trackId, **({"before": beforeTrackId} if beforeTrackId else {"after": afterTrackId})})
         return bool(response) if not isinstance(response, Error) else response
 
 
@@ -531,7 +531,7 @@ class Update:
         :return: `True`, если Вы успешно подписались на обновления музыки артиста, `False` в противном случае.
         """
 
-        response = await self._VKReq("followArtist", {"artist_id": artistId})
+        response = await self._req("followArtist", {"artist_id": artistId})
         return bool(response) if not isinstance(response, Error) else response
 
 
@@ -548,7 +548,7 @@ class Update:
         :return: `True`, если Вы успешно отписались от обновлений музыки артиста, `False` в противном случае.
         """
 
-        response = await self._VKReq("unfollowArtist", {"artist_id": artistId})
+        response = await self._req("unfollowArtist", {"artist_id": artistId})
         return bool(response) if not isinstance(response, Error) else response
 
 
@@ -565,7 +565,7 @@ class Update:
         :return: `True`, если Вы успешно подписались на обновления музыки куратора, `False` в противном случае.
         """
 
-        response = await self._VKReq("followCurator", {"curator_id": curatorId})
+        response = await self._req("followCurator", {"curator_id": curatorId})
         return bool(response) if not isinstance(response, Error) else response
 
 
@@ -582,7 +582,7 @@ class Update:
         :return: `True`, если Вы успешно отписались от обновлений музыки куратора, `False` в противном случае.
         """
 
-        response = await self._VKReq("unfollowCurator", {"curator_id": curatorId})
+        response = await self._req("unfollowCurator", {"curator_id": curatorId})
         return bool(response) if not isinstance(response, Error) else response
 
 
@@ -599,7 +599,7 @@ class Update:
         :return: `True`, если Вы успешно подписались на обновления музыки пользователя или группы, `False` в противном случае.
         """
 
-        response = await self._VKReq("followOwner", {"owner_id": ownerId})
+        response = await self._req("followOwner", {"owner_id": ownerId})
         return bool(response) if not isinstance(response, Error) else response
 
 
@@ -616,7 +616,7 @@ class Update:
         :return: `True`, если Вы успешно отписались на обновлений музыки пользователя или группы, `False` в противном случае.
         """
 
-        response = await self._VKReq("followOwner", {"owner_id": ownerId})
+        response = await self._req("followOwner", {"owner_id": ownerId})
         return bool(response) if not isinstance(response, Error) else response
 
 
@@ -647,5 +647,5 @@ class Update:
         :return: `True`, если аудиотрек успешно установлен (удалён) в (из) статус(а), `False` в противном случае.
         """
 
-        response = await self._VKReq("setBroadcast", {**({"audio": f"{ownerId}_{trackId}"} if ownerId and trackId else {}), **({"target_ids": groupIds} if groupIds else {})})
+        response = await self._req("setBroadcast", {**({"audio": f"{ownerId}_{trackId}"} if ownerId and trackId else {}), **({"target_ids": groupIds} if groupIds else {})})
         return True if not isinstance(response, Error) else response

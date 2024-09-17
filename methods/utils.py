@@ -42,7 +42,7 @@ class Utils:
         if params is None:
             params = dict()
 
-        return await self._VKReq(method, params, HTTPMethod)
+        return await self._req(method, params, HTTPMethod)
 
 
     @asyncFunction
@@ -57,7 +57,7 @@ class Utils:
         :return: словарь с информацией о текущем пользователе с гарантированными ключами: `id`, `first_name` и `last_name`.
         """
 
-        return await self._VKReq("users.get")
+        return await self._req("users.get")
 
 
     @asyncFunction
@@ -75,4 +75,4 @@ class Utils:
 
         url = addHTTPsToUrl(url)
 
-        return (await self._VKReq("utils.getShortLink", {"url": url})).get("short_url")
+        return (await self._req("utils.getShortLink", {"url": url})).get("short_url")

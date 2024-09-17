@@ -17,7 +17,6 @@
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
 import asyncio
-import os
 
 import re
 
@@ -47,10 +46,10 @@ class Get:
 
         id = f"{ownerId}_{trackId}"
 
-        tasks = [self._VKReq("getById", {"audios": id})]
+        tasks = [self._req("getById", {"audios": id})]
 
         if includeLyrics:
-            tasks.append(self._VKReq("getLyrics", {"audio_id": id}))
+            tasks.append(self._req("getLyrics", {"audio_id": id}))
 
         responses = await asyncio.gather(*tasks)
 
@@ -76,7 +75,7 @@ class Get:
 
 
     @asyncFunction
-    async def download(self, ownerId: int = None, trackId: int = None, filename: str = None, directory: str = os.getcwd(), track: "Track" = None) -> Union[str, None, Error]:
+    async def download(self, ownerId: int = None, trackId: int = None, filename: str = None, directory: str = None, track: "Track" = None) -> Union[str, None, Error]:
         """
         Загружает аудиотрек в формате MP3.
 
@@ -111,17 +110,8 @@ class Get:
             if not track.fileUrl:
                 return
 
-        if directory:
-            os.makedirs(directory, exist_ok=True)
-
-        filename = (filename if not filename.endswith(".mp3") else filename[:-4]) if filename else f"{track.artist} -- {track.title}"
-        filename = re.sub(r'[<>:"/\\|?*]', str(), filename)
-        filename = os.path.join(directory, filename)
-
-        m3u8Content = await self._client.sendReq(track.fileUrl, responseType="code")
-
         async def downloadSegment(segmentUrlLocal: str, keyLocal: str, ivLocal: bytes) -> None:
-            segmentData = await self._client.sendReq(segmentUrlLocal, responseType="file")
+            segmentData = await self._client.req(segmentUrlLocal, responseType="file")
 
             if keyLocal:
                 if len(segmentData) % AES.block_size != 0:
@@ -133,9 +123,21 @@ class Get:
 
             return segmentData
 
+        if not directory:
+            directory = os.getcwd()
+
+        else:
+            os.makedirs(directory, exist_ok=True)
+
+        filename = (filename if not filename.endswith(".mp3") else filename[:-4]) if filename else f"{track.artist} -- {track.title}"
+        filename = re.sub(r'[<>:"/\\|?*]', str(), filename)
+        filename = os.path.join(directory, filename)
+
         key = None
         iv = bytes.fromhex("00000000000000000000000000000000")
         tasks = list()
+
+        m3u8Content = await self._client.req(track.fileUrl, responseType="code")
 
         for line in m3u8Content.splitlines():
             if line.startswith("#EXT-X-KEY"):
@@ -144,7 +146,7 @@ class Get:
                 if method == "AES-128":
                     if not key:
                         keyUri = line.split('URI="')[1].split('"')[0]
-                        response = await self._client.sendReq(keyUri, responseType="response")
+                        response = await self._client.req(keyUri, responseType="response")
                         key = response.content if response.headers.get("content-type") else response.text.encode()
 
                     keyLocal = key
@@ -209,7 +211,7 @@ class Get:
         if not groupId:
             groupId = (await self.getSelf()).get("id")
 
-        tracks = await self._client.sendReq(VK + "audios" + str(groupId), cookies=self._cookies if hasattr(self, "_cookies") else None, headers=headers, responseType="code")
+        tracks = await self._client.req(VK + "audios" + str(groupId), cookies=self._cookies if hasattr(self, "_cookies") else None, headers=headers, responseType="code")
         tracks = await self._getTracks(tracks)
 
         return tracks
@@ -235,13 +237,13 @@ class Get:
 
         params = {"artist_id": artistId}
 
-        tasks = [self._VKReq("getArtistById", params)]
+        tasks = [self._req("getArtistById", params)]
 
         if includeAlbums:
-            tasks.append(self._VKReq("getAlbumsByArtist", params))
+            tasks.append(self._req("getAlbumsByArtist", params))
 
         if includeTracks:
-            tasks.append(self._VKReq("getAudiosByArtist", params))
+            tasks.append(self._req("getAudiosByArtist", params))
 
         responses = await asyncio.gather(*tasks)
 
@@ -279,7 +281,7 @@ class Get:
         :return: список артистов в виде объектов модели `Artist`, артист в виде объекта модели `Artist` (если он единственственный), или None (если `artistId` неверный или похожие артисты отсутствуют).
         """
 
-        return self._finalizeResponse((await self._VKReq("getRelatedArtistsById", {"artist_id": artistId, "count": limit})).get("artists"), Artist)
+        return self._finalizeResponse((await self._req("getRelatedArtistsById", {"artist_id": artistId, "count": limit})).get("artists"), Artist)
 
 
     async def _getTracks(self, tracks: str, objectType: Union[Type[Union[Album, Playlist]], None] = None) -> Union[List[Track], Error]:
@@ -326,10 +328,10 @@ class Get:
         :return: информация об альбоме в виде объекта модели `Album`.
         """
 
-        tasks = [self._VKReq("getPlaylistById", {"owner_id": ownerId, "playlist_id": albumId})]
+        tasks = [self._req("getPlaylistById", {"owner_id": ownerId, "playlist_id": albumId})]
 
         if includeTracks:
-            tasks.append(self._client.sendReq(VK + "music/album/" + f"{ownerId}_{albumId}", headers=headers, responseType="code"))
+            tasks.append(self._client.req(VK + "music/album/" + f"{ownerId}_{albumId}", headers=headers, responseType="code"))
 
         responses = await asyncio.gather(*tasks)
 
@@ -364,10 +366,10 @@ class Get:
         if not ownerId:
             ownerId = (await self.getSelf()).get("id")
 
-        tasks = [self._VKReq("getPlaylistById", {"owner_id": ownerId, "playlist_id": playlistId})]
+        tasks = [self._req("getPlaylistById", {"owner_id": ownerId, "playlist_id": playlistId})]
 
         if includeTracks:
-            tasks.append(self._client.sendReq(VK + "music/playlist/" + f"{ownerId}_{playlistId}", cookies=self._cookies if hasattr(self, "_cookies") else None, headers=headers, responseType="code"))
+            tasks.append(self._client.req(VK + "music/playlist/" + f"{ownerId}_{playlistId}", cookies=self._cookies if hasattr(self, "_cookies") else None, headers=headers, responseType="code"))
 
         responses = await asyncio.gather(*tasks)
 
@@ -408,7 +410,7 @@ class Get:
             playlistTypes[index] = playlistType.lower()
 
         method, params = "getPlaylists", {"owner_id": ownerId, "count": playlistsPerReq}
-        playlists_ = await self._VKReq(method, params)
+        playlists_ = await self._req(method, params)
         if isinstance(playlists_, Error):
             return playlists_
 
@@ -419,7 +421,7 @@ class Get:
         if offset < count:
             tasks = []
             while offset < count:
-                tasks.append(self._VKReq(method, {**params, **{"offset": offset}}))
+                tasks.append(self._req(method, {**params, **{"offset": offset}}))
                 offset += playlistsPerReq
 
             playlists_ = await asyncio.gather(*tasks)
@@ -455,7 +457,7 @@ class Get:
         :return: список аудиотреков в виде объектов модели `Track`, аудиотрек в виде объекта модели `Track` (если он единственный), или `None` (если неверный `curatorId` или аудиотреки отсутствуют).
         """
 
-        return self._finalizeResponse((await self._VKReq("getAudiosByCurator", {"curator_id": curatorId, "count": limit, "offset": offset})).get("items"), Track)
+        return self._finalizeResponse((await self._req("getAudiosByCurator", {"curator_id": curatorId, "count": limit, "offset": offset})).get("items"), Track)
 
 
     @asyncFunction
@@ -470,7 +472,7 @@ class Get:
         :return: список аудиотреков в виде объектов модели `Track` с атрибутами `ownerId`, `trackId`, `id` и `url`.
         """
 
-        tracks = (await self._VKReq("getAudioIdsBySource", {"source": "feed"})).get("audios")
+        tracks = (await self._req("getAudioIdsBySource", {"source": "feed"})).get("audios")
         for index, track in enumerate(tracks):
             ownerId, trackId = track.get("audio_id").split("_")[:2]
             tracks[index] = {"owner_id": int(ownerId), "id": int(trackId)}
@@ -501,7 +503,7 @@ class Get:
         if not all((ownerId, trackId)) and limit < 10:
             limit = 10
 
-        return self._finalizeResponse((await self._VKReq("getRecommendations", {"count": limit, "offset": offset, **({"target_audio": f"{ownerId}_{trackId}"} if all((ownerId, trackId)) else {})})).get("items"), Track)
+        return self._finalizeResponse((await self._req("getRecommendations", {"count": limit, "offset": offset, **({"target_audio": f"{ownerId}_{trackId}"} if all((ownerId, trackId)) else {})})).get("items"), Track)
 
 
     @asyncFunction
@@ -568,7 +570,7 @@ class Get:
         :return: количество аудиотреков, принадлежащих пользователю или группе, в виде целого числа.
         """
 
-        return await self._VKReq("getCount", {"owner_id": ownerId})
+        return await self._req("getCount", {"owner_id": ownerId})
 
 
     @asyncFunction
@@ -585,7 +587,7 @@ class Get:
         :return: список самых частых поисковых запросов в музыке в виде строк, самый частый поисковой запрос в музыке в виде строки (если он единственный) или `None` (если поисковые запросы отсутствуют).
         """
 
-        return [item.get("name") for item in (await self._VKReq("getSearchTrends", {"count": limit, "offset": offset})).get("items")]
+        return [item.get("name") for item in (await self._req("getSearchTrends", {"count": limit, "offset": offset})).get("items")]
 
 
     @asyncFunction
@@ -605,7 +607,7 @@ class Get:
         :return: аудиотрек в виде объекта модели `Track`, `None` (если ничего не проигрывается), или `False` (если музыка не транслируется в статус, работает только для текущего пользователя).
         """
 
-        broadcast = await self._VKReq("status.get", ({"user_id": id} if id > 0 else {"group_id": -id}) if id else None)
+        broadcast = await self._req("status.get", ({"user_id": id} if id > 0 else {"group_id": -id}) if id else None)
         if isinstance(broadcast, Error):
             return broadcast
 
@@ -614,7 +616,7 @@ class Get:
             return Track(audio, self)
 
         if not id or id == (await self.getSelf()).get("id"):
-            isBroadcastEnabled = (await self._VKReq("getBroadcast")).get("enabled")
+            isBroadcastEnabled = (await self._req("getBroadcast")).get("enabled")
             if not bool(isBroadcastEnabled):
                 return False
 

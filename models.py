@@ -61,10 +61,10 @@ class Artist(BaseModel):
             self.photo = dict(sorted({f'{photo.get("width")}': photo.get("url") for photo in photo[0].get("photo")}.items(), key=lambda item: (int(item[0])))) if photo else None
 
         albums = artist.get("albums")
-        self.albums = [Album(album, self._client) for album in albums] if albums else None
+        self.albums = [Album(album, client=self._client) for album in albums] if albums else None
 
         tracks = artist.get("tracks")
-        self.tracks = [Track(track, self._client) for track in tracks] if tracks else None
+        self.tracks = [Track(track, client=self._client) for track in tracks] if tracks else None
 
         self.id = artist.get("id") or artist.get("artist_id")
 
@@ -132,10 +132,10 @@ class Album(BaseModel):
         self.description = description if description else None
 
         mainArtists = album.get("main_artists")
-        self.artists = [Artist(mainArtist, self._client) for mainArtist in mainArtists] if mainArtists else None
+        self.artists = [Artist(mainArtist, client=self._client) for mainArtist in mainArtists] if mainArtists else None
 
         featuredArtists = album.get("featured_artists")
-        self.featuredArtists = [Artist(featuredArtist, self._client) for featuredArtist in featuredArtists] if featuredArtists else None
+        self.featuredArtists = [Artist(featuredArtist, client=self._client) for featuredArtist in featuredArtists] if featuredArtists else None
 
         releaseYear = album.get("year")
         self.releaseYear = releaseYear if releaseYear else None
@@ -218,7 +218,7 @@ class Track(BaseModel):
         url (str): URL страницы аудиотрека.
     """
 
-    def __init__(self, track: dict, client: "Client" = None, releaseTrack: bool = False) -> None:
+    def __init__(self, track: dict, releaseTrack: bool = False, client: "Client" = None) -> None:
         super().__init__(client)
 
         self.title = track.get("title")
@@ -234,10 +234,10 @@ class Track(BaseModel):
         self.artist = artist if artist else None
 
         mainArtists = track.get("main_artists")
-        self.artists = [Artist(mainArtist, self._client) for mainArtist in mainArtists] if mainArtists else None
+        self.artists = [Artist(mainArtist, client=self._client) for mainArtist in mainArtists] if mainArtists else None
 
         featuredArtists = track.get("featured_artists")
-        self.featuredArtists = [Artist(featuredArtist, self._client) for featuredArtist in featuredArtists] if featuredArtists else None
+        self.featuredArtists = [Artist(featuredArtist, client=self._client) for featuredArtist in featuredArtists] if featuredArtists else None
 
         genreId = track.get("genre_id")
         self.genre = Genre(genreId=genreId, client=self._client) if genreId else None
@@ -272,7 +272,7 @@ class Track(BaseModel):
 
             if releaseTrackId:
                 releaseTrackOwnerId, releaseTrackTrackId = tuple(map(int, releaseTrackId.split("_")))
-                self.releaseTrack = Track({"owner_id": releaseTrackOwnerId, "track_id": releaseTrackTrackId}, self._client, True)
+                self.releaseTrack = Track({"owner_id": releaseTrackOwnerId, "track_id": releaseTrackTrackId}, True, client=self._client)
 
         self.ownerId = track.get("owner_id")
         self.trackId = track.get("id") or track.get("track_id")
@@ -287,7 +287,7 @@ class Track(BaseModel):
 
 
     @asyncFunction
-    async def download(self, filename: str = None, directory: str = os.getcwd()) -> Union[str, None, Error]:
+    async def download(self, filename: str = None, directory: str = None) -> Union[str, None, Error]:
         return await self._client.download(filename=filename, directory=directory, track=self)
 
 
@@ -374,7 +374,7 @@ class Playlist(BaseModel):
         self.photo = {key.split("_")[1]: value[:value.rfind("&c_uniq_tag=")] for key, value in photo.items() if key.startswith("photo_")} if photo else None
 
         original = playlist.get("original")
-        self.original = Playlist(original, self._client) if original else None
+        self.original = Playlist(original, client=self._client) if original else None
 
         trackCount = playlist.get("count")
         self.trackCount = trackCount if trackCount else None

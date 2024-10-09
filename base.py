@@ -16,15 +16,14 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
-import json
-from datetime import datetime
-from types import FunctionType, MethodType
+from json import JSONEncoder
 
-
-class CustomEncoder(json.JSONEncoder):
+class Encoder(JSONEncoder):
     def default(self, o) -> any:
-        if isinstance(o, BaseModel):
-            return o.toDict()
+        from datetime import datetime
+
+        if any((class_.__name__ == "Base" for class_ in o.__class__.__bases__)):
+            return o._toDict()
 
         elif isinstance(o, datetime):
             return o.strftime("%d/%m/%Y %H:%M:%S")
@@ -35,12 +34,11 @@ class CustomEncoder(json.JSONEncoder):
         return super().default(o)
 
 
-class BaseModel:
-    def __init__(self, client: "Client" = None) -> None:
-        self._client = client
+class Base:
+    def _toDict(self) -> dict:
+        from types import FunctionType, MethodType
 
-    def toDict(self) -> any:
-        result = {}
+        result = dict()
         for key, value in self.__dict__.items():
             if any((value is None, isinstance(value, (FunctionType, MethodType)), key == "_client")):
                 continue
@@ -49,5 +47,10 @@ class BaseModel:
 
         return result
 
-    def __repr__(self) -> any:
-        return json.dumps(self.toDict(), indent=4, ensure_ascii=False, cls=CustomEncoder)
+
+    def __repr__(self) -> str:
+        import json
+
+        return json.dumps(self._toDict(), indent=4, ensure_ascii=False, cls=Encoder)
+
+    __str__ = __repr__

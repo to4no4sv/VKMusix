@@ -1,24 +1,47 @@
+#  VKMusix — VK Music API Client Library for Python
+#  Copyright (C) 2024—present to4no4sv <https://github.com/to4no4sv/VKMusix>
+#
+#  This file is part of VKMusix.
+#
+#  VKMusix is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU Lesser General Public License as published
+#  by the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  VKMusix is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+#  GNU Lesser General Public License for more details.
+#
+#  You should have received a copy of the GNU Lesser General Public License
+#  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
+
 import asyncio
 import httpx
 import base64
 
 from typing import Union, List, Type
 
-from .aio import asyncFunction
-from .models import Artist, Album, Track, Playlist
-from .config import VKAPI, VKAPIVersion, RuCaptchaAPI
-from .errors import errorsDict, createErrorClass, Error
-from .cookies import getCookies, checkCookies
-from .utils import checkFile
-from .webClient import Client as WebClient
+from vkmusix.aio import asyncFunction
+from vkmusix.config import VKAPI, VKAPIVersion, RuCaptchaAPI
+from vkmusix.errors import *
 
-from .methods.utils import Utils
-from .methods.search import Search
-from .methods.update import Update
-from .methods.get import Get
+from vkmusix.utils import checkFile
+from vkmusix.cookies import getCookies, checkCookies
+from vkmusix.webClient import Client as WebClient
 
+from vkmusix.methods import *
 
-class Client(Utils, Search, Get, Update):
+class Client(
+    Artists,
+    Albums,
+    Tracks,
+    Playlists,
+    Searching,
+    Users,
+    Curators,
+    Utils,
+):
     """
     Класс для взаимодействия с VK Music.
 
@@ -96,11 +119,15 @@ class Client(Utils, Search, Get, Update):
             if isinstance(self._cookies, dict):
                 self._raiseError(self._cookies.get("error"))
 
+        else:
+            self._cookies = None
+
         self._clientSession = httpx.AsyncClient(proxies=self._proxies)
         self._client = WebClient(self._clientSession)
 
         self._defaultParams = {"access_token": token, "v": VKAPIVersion}
         self._closed = False
+        self._selfId = None
 
         try:
             asyncio.get_running_loop()
@@ -122,11 +149,15 @@ class Client(Utils, Search, Get, Update):
                 )
 
 
+    @asyncFunction
     async def checkUpdates(self) -> None:
+        if self._closed:
+            self._raiseError("sessionClosed")
+
         from .version import __version__
         from packaging import version
 
-        latestVersion = await self._client.req("https://pypi.org/pypi/vkmusix/json").get("info").get("version")
+        latestVersion = (await self._client.req("https://pypi.org/pypi/vkmusix/json")).get("info").get("version")
 
         if version.parse(latestVersion) > version.parse(__version__):
             ruWarning = f"Внимание: Доступна новая версия библиотеки {latestVersion} (https://pypi.org/project/vkmusix). Вы используете версию {__version__}."
@@ -170,7 +201,7 @@ class Client(Utils, Search, Get, Update):
             self._raiseError("sessionClosed")
 
         if not params:
-            params = {}
+            params = dict()
 
         else:
             limit = params.get("count")
@@ -191,16 +222,16 @@ class Client(Utils, Search, Get, Update):
             errorCode = error.get("error_code")
 
             if errorCode == 3:
-                return self._raiseError("VKInvalidMethod")
+                self._raiseError("invalidMethod")
 
             elif errorCode == 5:
                 self._raiseError("VKInvalidToken")
 
             elif errorCode in [6, 9]:
-                return self._raiseError("tooHighRequestSendingRate")
+                self._raiseError("tooHighRequestSendingRate")
 
             elif errorCode == 10 and method == "createChatPlaylist":
-                return self._raiseError("chatNotFound")
+                self._raiseError("chatNotFound")
 
             elif errorCode == 14:
                 captchaImg = error.get("captcha_img")
@@ -216,16 +247,16 @@ class Client(Utils, Search, Get, Update):
 
             elif errorCode in [15, 201, 203]:
                 if ": can not restore too late" in error.get("error_msg"):
-                    return self._raiseError("trackRestorationTimeEnded")
+                    self._raiseError("trackRestorationTimeEnded")
 
                 else:
-                    return self._raiseError("accessDenied")
+                    self._raiseError("accessDenied")
 
             elif errorCode == 18:
-                return self._raiseError("userWasDeletedOrBanned")
+                self._raiseError("userWasDeletedOrBanned")
 
             elif errorCode == 104:
-                return self._raiseError("notFound")
+                self._raiseError("notFound")
 
             else:
                 return error
@@ -279,21 +310,59 @@ class Client(Utils, Search, Get, Update):
         if not errorType:
             return
 
+        errorsDict = {
+            "unknown": Unknown,
+
+            "sessionClosed": SessionClosed,
+
+            "VKInvalidToken": VKInvalidToken,
+            "VKCookieFileNotFound": VKCookieFileNotFound,
+            "VKInvalidCookie": VKInvalidCookie,
+            "VKUnsuccessfulLoginAttempt": VKUnsuccessfulLoginAttempt,
+
+            "RuCaptchaInvalidKey": RuCaptchaInvalidKey,
+            "RuCaptchaZeroBalance": RuCaptchaZeroBalance,
+            "RuCaptchaBannedIP": RuCaptchaBannedIP,
+            "RuCaptchaBannedAccount": RuCaptchaBannedAccount,
+
+            "invalidMethod": InvalidMethod,
+            "accessDenied": AccessDenied,
+            "accessDeniedWithoutCookie": AccessDeniedWithoutCookie,
+
+            "userWasDeletedOrBanned": UserWasDeletedOrBanned,
+            "trackRestorationTimeEnded": TrackRestorationTimeEnded,
+
+            "notFound": NotFound,
+            "chatNotFound": ChatNotFound,
+            "artistNotFound": ArtistNotFound,
+            "albumNotFound": AlbumNotFound,
+            "trackNotFound": TrackNotFound,
+            "playlistNotFound": PlaylistNotFound,
+
+            "noneQuery": NoneQuery,
+
+            "ownerIdsAndTrackIdsTypeDifferent": OwnerIdsAndTrackIdsTypeDifferent,
+            "ownerIdsAndTrackIdsLenDifferent": OwnerIdsAndTrackIdsLenDifferent,
+
+            "trackReorderNeedsBeforeOrAfterArgument": TrackReorderNeedsBeforeOrAfterArgument,
+            "trackReorderNeedsOnlyBeforeOrAfterNotBoth": TrackReorderNeedsOnlyBeforeOrAfterNotBoth,
+
+            "MP3FileNotFound": MP3FileNotFound,
+            "MP3FileTooBig": MP3FileTooBig,
+
+            "tooHighRequestSendingRate": TooHighRequestSendingRate,
+
+            "proxyShouldBeDict": ProxyShouldBeDict,
+            "invalidProxyDict": InvalidProxyDict,
+        }
+
         if errorType not in errorsDict:
             errorType = "unknown"
 
-        errorClass = createErrorClass(errorType)
-
-        error = errorsDict.get(errorType)
-        errorText = getattr(error, self._errorsLanguage) if self._errorsLanguage else "🇷🇺: " + error.ru + " 🇬🇧: " + error.en
-
-        if error.critical:
-            raise errorClass(errorText)
-
-        return Error(error.code, errorClass.__name__, errorText)
+        raise errorsDict.get(errorType)()
 
 
-    def _finalizeResponse(self, response: Union[List[dict], dict], objectType: Type[Union[Artist, Album, Track, Playlist]]) -> Union[List[Union[Artist, Album, Track, Playlist]], None]:
+    def _finalizeResponse(self, response: Union[List[dict], dict], objectType: Type[any]) -> Union[List[any], None]:
         if not (response or response is False):
             return
 
@@ -301,14 +370,18 @@ class Client(Utils, Search, Get, Update):
             response = [response]
 
         for index, obj in enumerate(response):
+            from vkmusix.types import Playlist
+
             if objectType is Playlist:
                 playlistType = obj.get("type")
 
                 if playlistType in [0, 5]:
-                    obj = objectType(obj, False if obj.get("original") else True, self)
+                    obj = objectType(obj, False if obj.get("original") else True, client=self)
 
                 elif playlistType == 1:
-                    obj = Album(obj, True, self)
+                    from vkmusix.types import Album
+
+                    obj = Album(obj, True, client=self)
 
             else:
                 obj = objectType(obj, client=self)

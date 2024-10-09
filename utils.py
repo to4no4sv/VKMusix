@@ -21,6 +21,22 @@ import platform
 
 from typing import Union
 
+from datetime import datetime
+
+from vkmusix.config import utcTz, moscowTz
+
+async def getSelfId(self: "Client") -> int:
+    if not self._selfId:
+        self._selfId = (await self.getSelf()).get("id")
+
+    return self._selfId
+
+
+def unixToDatetime(seconds: int) -> datetime:
+    UTC = datetime.utcfromtimestamp(seconds)
+    return UTC.replace(tzinfo=utcTz).astimezone(moscowTz)
+
+
 def addHTTPsToUrl(url: str) -> str:
     if not ("https://" in url or "http://" in url):
         url = "https://" + url
@@ -42,13 +58,13 @@ def fileExistsCaseInsensitive(filename: str) -> Union[str, None]:
 
 
 def checkFile(filename: str) -> Union[str, None]:
-    if os.path.isfile(filename):  # Проверка на существование файла в точном регистре
+    if os.path.isfile(filename):
         return filename
 
-    system = platform.system()  # Проверка на операционную систему
-    if system not in ["Linux", "Darwin"]:  # Darwin — это macOS
+    system = platform.system()
+    if system not in ["Linux", "Darwin"]:
         return
 
-    filename = fileExistsCaseInsensitive(filename)  # Проверка на существование файла без учета регистра
+    filename = fileExistsCaseInsensitive(filename)
     if not filename:
         return

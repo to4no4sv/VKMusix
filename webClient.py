@@ -28,7 +28,6 @@ retries = 5
 timeout = 20
 sleepTime = .25
 
-
 class Client:
     def __init__(self, client: httpx.AsyncClient) -> None:
         self.client = client
@@ -41,7 +40,7 @@ class Client:
         url = addHTTPsToUrl(url)
 
         if cookies and isinstance(cookies, list):
-            cookies_ = {}
+            cookies_ = dict()
             for index, cookie in enumerate(cookies):
                 cookies_[cookie.get("name")] = cookie.get("value")
             cookies = cookies_
@@ -78,16 +77,12 @@ class Client:
                 elif responseType == "response":
                     return response
 
-
-            except httpx.RequestError:
+            except (httpx.TimeoutException, httpx.ConnectError, httpx.RequestError):
                 retriesLocal -= 1
                 await asyncio.sleep(sleepTime)
 
             except asyncio.TimeoutError:
                 retriesLocal -= 1
                 await asyncio.sleep(sleepTime)
-
-            except Exception as e:
-                print(e)
 
     req = request

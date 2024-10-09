@@ -16,22 +16,24 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
-import asyncio
-from functools import wraps, partial
-
-
 class SyncToAsync:
-    def __init__(self, func):
+    from functools import partial
+
+    def __init__(self, func: callable) -> None:
         self.func = func
 
 
-    def __get__(self, instance, owner):
+    def __get__(self, instance: any, owner: any) -> partial:
+        from functools import partial
+
         return partial(self.__call__, instance)
 
 
-    def __call__(self, instance, *args, **kwargs):
+    def __call__(self, instance: any, *args: any, **kwargs: any) -> any:
+        from asyncio import get_event_loop, new_event_loop, set_event_loop
+
         try:
-            loop = asyncio.get_event_loop()
+            loop = get_event_loop()
             if loop.is_running():
                 return self.func(instance, *args, **kwargs)
 
@@ -39,18 +41,21 @@ class SyncToAsync:
                 return loop.run_until_complete(self.func(instance, *args, **kwargs))
 
         except RuntimeError:
-            newLoop = asyncio.new_event_loop()
-            asyncio.set_event_loop(newLoop)
+            newLoop = new_event_loop()
+            set_event_loop(newLoop)
             result = newLoop.run_until_complete(self.func(instance, *args, **kwargs))
             newLoop.close()
             return result
 
         finally:
-            asyncio.set_event_loop(loop)
+            set_event_loop(loop)
 
 
-def asyncFunction(func):
+def asyncFunction(func: any) -> any:
+    from functools import wraps
+
     @wraps(func)
-    async def wrapper(instance, *args, **kwargs):
+    async def wrapper(instance: any, *args: any, **kwargs: any) -> any:
         return await func(instance, *args, **kwargs)
+
     return SyncToAsync(wrapper)

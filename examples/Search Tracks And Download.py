@@ -35,16 +35,18 @@
 async def searchTracksAndDownload(query: str = "Heronwater", limit: int = 5, directory: str = None) -> None:
     import os
     import asyncio
-    from vkmusix import Client, Error
+    from vkmusix import Client
+    from vkmusix.errors import Error
 
     if not directory:
         directory = os.path.join(os.getcwd(), "tracks")
 
     async with Client(errorsLanguage="ru") as client:
-        tracks = await client.searchTracks(query=query, limit=limit)
+        try:
+            tracks = await client.searchTracks(query=query, limit=limit)
 
-        if isinstance(tracks, Error):
-            print(tracks)
+        except Error as e:
+            print(e)
             return
 
         semaphore = asyncio.Semaphore(8)

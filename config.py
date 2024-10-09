@@ -16,17 +16,19 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
-import pytz
-
 VK = "https://vk.com/"
 VKAPI = "https://api.vk.com/method/"
 VKAPIVersion = 5.199
 
 RuCaptchaAPI = "https://api.rucaptcha.com/"
 
-headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36"}
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36",
+}
 
-moscowTz = pytz.timezone("Europe/Moscow")
-
-playlistsPerReq = 10
 playlistsOwnerId = -183773637
+
+import pytz
+
+utcTz = pytz.utc
+moscowTz = pytz.timezone("Europe/Moscow")

@@ -23,9 +23,18 @@ class GetAlbumTracks:
     from vkmusix.types import Track
 
     @asyncFunction
-    async def getAlbumTracks(self, ownerId: int, albumId: int) -> Union[List[Track], Track]:
+    async def getAlbumTracks(self, ownerId: int, albumId: int) -> Union[List[Track], Track, None]:
         from vkmusix.config import VK, headers
 
-        tracks = await self._client.req(f"{VK}music/album/{ownerId}_{albumId}", headers=headers, responseType="code")
+        tracks = await self._client.req(f"{VK}music/album/{ownerId}_{albumId}", headers=headers, responseType="response")
+        statusCode = tracks.status_code
 
-        return await self._getTracks(tracks)
+        if statusCode == 404:
+            return
+
+        elif statusCode == 302:
+            tracks = await self._client.req(f'{VK}{tracks.headers.get("Location")}', headers=headers, responseType="response")
+
+        tracks = await self._getTracks(tracks.text)
+
+        return tracks

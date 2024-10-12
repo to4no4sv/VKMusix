@@ -32,5 +32,11 @@ class UnfollowCurator:
         :return: `True`, если Вы успешно отписались от обновлений музыки куратора, `False` в противном случае.
         """
 
-        response = await self._req("unfollowCurator", {"curator_id": curatorId})
+        response = await self._req(
+            "unfollowCurator",
+            {
+                "curator_id": curatorId,
+            },
+        )
+
         return bool(response)

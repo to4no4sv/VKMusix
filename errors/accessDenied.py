@@ -18,7 +18,7 @@
 
 from vkmusix.errors import Error
 
-class AccessDenied(Error):
+class AccessDenied(Error, PermissionError):
     def __init__(self) -> None:
         self.ru = "Недостаточно прав доступа для совершения этого действия."
         self.en = "Insufficient permissions to perform this action."

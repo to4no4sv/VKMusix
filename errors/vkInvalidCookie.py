@@ -18,7 +18,7 @@
 
 from vkmusix.errors import Error
 
-class VKInvalidCookie(Error):
+class VKInvalidCookie(Error, ValueError):
     def __init__(self) -> None:
         self.ru = "В файле с расширением .VKCookie были недействительные cookie. Пожалуйста, перезапустите Ваш код."
         self.en = "The file with the .VKCookie extension contained invalid cookies. Please restart your code."

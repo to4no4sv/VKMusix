@@ -18,7 +18,7 @@
 
 from vkmusix.errors import Error
 
-class NotFound(Error):
+class NotFound(Error, LookupError):
     def __init__(self) -> None:
         self.ru = "Объект не найден. Проверьте введённые данные."
         self.en = "Object not found. Please check the entered data"

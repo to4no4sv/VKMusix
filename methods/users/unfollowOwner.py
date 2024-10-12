@@ -32,5 +32,11 @@ class UnfollowOwner:
         :return: `True`, если Вы успешно отписались на обновлений музыки пользователя или группы, `False` в противном случае.
         """
 
-        response = await self._req("followOwner", {"owner_id": ownerId})
+        response = await self._req(
+            "followOwner",
+            {
+                "owner_id": ownerId,
+            },
+        )
+
         return bool(response)

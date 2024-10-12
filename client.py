@@ -127,7 +127,10 @@ class Client(
         self._session = httpx.AsyncClient(proxies=self._proxies)
         self._client = WebClient(self._session)
 
-        self._params = {"access_token": token, "v": VKAPIVersion}
+        self._params = {
+            "access_token": token,
+            "v": VKAPIVersion,
+        }
         self._closed = False
         self._me = None
 

@@ -77,7 +77,7 @@ class Client:
                 elif responseType == "response":
                     return response
 
-            except (httpx.TimeoutException, httpx.ConnectError, httpx.RequestError):
+            except (httpx.TimeoutException, httpx.ConnectError, httpx.RequestError, httpx.ReadError):
                 retriesLocal -= 1
                 await asyncio.sleep(sleepTime)
 

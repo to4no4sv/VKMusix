@@ -35,22 +35,12 @@ class Encoder(JSONEncoder):
 
 
 class Base:
-    def _toDict(self) -> dict:
-        from types import FunctionType, MethodType
-
-        result = dict()
-        for key, value in self.__dict__.items():
-            if any((value is None, isinstance(value, (FunctionType, MethodType)), key == "_client")):
-                continue
-
-            result[key if not key.startswith("_") else key[1:]] = value
-
-        return result
-
-
     def __repr__(self) -> str:
-        import json
+        if len(self.__dict__) == 1:
+            return list(self.__dict__.values())[0]
 
-        return json.dumps(self._toDict(), indent=4, ensure_ascii=False, cls=Encoder)
+        from json import dumps
+
+        return dumps(self.__dict__, indent=4, ensure_ascii=False, cls=Encoder)
 
     __str__ = __repr__

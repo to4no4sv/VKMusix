@@ -18,7 +18,7 @@
 
 from vkmusix.errors import Error
 
-class RuCaptchaBannedAccount(Error):
+class RuCaptchaBannedAccount(Error, ValueError):
     def __init__(self) -> None:
         self.ru = "Аккаунт заблокирован на RuCaptcha."
         self.en = "Account blocked on RuCaptcha."

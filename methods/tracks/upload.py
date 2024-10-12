@@ -29,7 +29,7 @@ class Upload:
         result = client.upload(filename="prombl — zapreti", title="zapreti", artist="prombl", lyrics="yourLyrics", removeFromSearchResults=True, playlistId="yourPlaylistId", groupId="yourGroupId")\n
         print(result)
 
-        :param filename: имя MP3-файла, содержащего аудиотрек, который необходимо загрузить (без расширения). (str)
+        :param filename: имя MP3-файла, содержащего аудиотрек, который необходимо загрузить. (str)
         :param title: название аудиотрека. (str, необязательно)
         :param artist: артист(ы) аудиотрека. (str, необязательно)
         :param lyrics: текст аудиотрека. (str, необязательно)

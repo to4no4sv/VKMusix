@@ -32,26 +32,24 @@
     Скорость загрузки варьируется от примерно 13,06 MB/сек до 15,5 MB/сек.
     Скорость обработки треков варьируется от 2,48 треков/сек до 2,99 треков/сек."""
 
-async def searchTracksAndDownload(query: str = "Heronwater", limit: int = 5, directory: str = None) -> None:
+async def searchTracksAndDownload(query: str, limit: int, directory: str = None) -> None:
     import os
     import asyncio
+
     from vkmusix import Client
-    from vkmusix.errors import Error
+    from vkmusix.types import Track
+    from vkmusix.enums import Language
 
     if not directory:
         directory = os.path.join(os.getcwd(), "tracks")
 
-    async with Client(errorsLanguage="ru") as client:
-        try:
-            tracks = await client.searchTracks(query=query, limit=limit)
-
-        except Error as e:
-            print(e)
-            return
+    async with Client(
+        language=Language.Russian,
+    ) as client:
+        tracks = await client.searchTracks(query=query, limit=limit)
 
         semaphore = asyncio.Semaphore(8)
-
-        async def downloadWithSemaphore(track: "Track") -> None:
+        async def downloadWithSemaphore(track: Track) -> None:
             async with semaphore:
                 return await track.download(directory=directory)
 
@@ -60,4 +58,4 @@ async def searchTracksAndDownload(query: str = "Heronwater", limit: int = 5, dir
 
 if __name__ == "__main__":
     import asyncio
-    asyncio.run(searchTracksAndDownload())
+    asyncio.run(searchTracksAndDownload("Heronwater", 5))

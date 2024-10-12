@@ -21,18 +21,21 @@ class _GetTracks:
 
     from vkmusix.types import Track
 
-    async def _getTracks(self, tracks: str) -> Union[List[Track]]:
+    async def _getTracks(self, tracks: str) -> Union[List[Track], Track, None]:
         import re
 
         from vkmusix.types import Track
 
         tracks = re.sub(r"\\/", "/", re.sub(r"false", "False", re.sub(r"true", "True", re.sub(r"null", "None", tracks))))
 
+        if not tracks:
+            return
+
         try:
             tracks = eval(tracks[tracks.rfind("[["): tracks.rfind("]]") + 2])
 
         except SyntaxError:
-            self._raiseError("accessDenied" + ("WithoutCookie" if not hasattr(self, "_cookies") else ""))
+            self._raiseError("accessDenied" + ("WithoutCookie" if not self._cookies else str()))
 
         if isinstance(tracks, list):
             for index, track in enumerate(tracks):

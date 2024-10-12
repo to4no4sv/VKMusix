@@ -33,11 +33,23 @@ class RemovePlaylist:
         :return: `True`, если плейлист успешно удалён, `False` в противном случае.
         """
 
+        from vkmusix.errors import NotFound
+
         if not groupId:
             from vkmusix.utils import getSelfId
 
             groupId = await getSelfId(self)
 
-        response = await self._req("deletePlaylist", {"owner_id": groupId, "playlist_id": playlistId})
+        try:
+            await self._req(
+                "deletePlaylist",
+                {
+                    "owner_id": groupId,
+                    "playlist_id": playlistId,
+                },
+            )
 
-        return bool(response)
+        except NotFound:
+            return False
+
+        return True

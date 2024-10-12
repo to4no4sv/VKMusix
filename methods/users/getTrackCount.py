@@ -32,4 +32,11 @@ class GetTrackCount:
         :return: количество аудиотреков, принадлежащих пользователю или группе, в виде целого числа.
         """
 
-        return await self._req("getCount", {"owner_id": ownerId})
+        trackCount = await self._req(
+            "getCount",
+            {
+                "owner_id": ownerId,
+            },
+        )
+
+        return trackCount

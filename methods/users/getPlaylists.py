@@ -51,7 +51,14 @@ class GetPlaylists:
         if not isinstance(playlistTypes, list):
             playlistTypes = [playlistTypes]
 
-        playlists_ = await self._req("getPlaylists", {"owner_id": ownerId, "count": limit, "offset": offset})
+        playlists_ = await self._req(
+            "getPlaylists",
+            {
+                "owner_id": ownerId,
+                "count": limit,
+                "offset": offset,
+            },
+        )
 
         playlists = self._finalizeResponse([playlist for playlist in playlists_.get("items")], Playlist)
 

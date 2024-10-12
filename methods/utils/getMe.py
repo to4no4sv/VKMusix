@@ -16,19 +16,23 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
-class GetSelf:
+class GetMe:
     from vkmusix.aio import asyncFunction
 
     @asyncFunction
-    async def getSelf(self) -> dict:
+    async def getMe(self) -> dict:
         """
         Получает информацию о текущем пользователе.
 
         Пример использования:\n
-        result = client.getSelf()\n
+        result = client.getMe()\n
         print(result)
 
         :return: словарь с информацией о текущем пользователе с гарантированными ключами: `id`, `first_name` и `last_name`.
         """
 
-        return await self._req("users.get")
+        me = await self._req("users.get")
+        if not self._me:
+            self._me = me
+
+        return me

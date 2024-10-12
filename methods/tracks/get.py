@@ -17,11 +17,13 @@
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
 class Get:
+    from typing import Union
+
     from vkmusix.aio import asyncFunction
     from vkmusix.types import Track
 
     @asyncFunction
-    async def get(self, ownerId: int, trackId: int, includeLyrics: bool = False) -> Track:
+    async def get(self, ownerId: int, trackId: int, includeLyrics: bool = False) -> Union[Track, None]:
         """
         Получает информацию об аудиотреке по его идентификатору.
 
@@ -32,7 +34,7 @@ class Get:
         :param ownerId: идентификатор владельца аудиотрека (пользователь или группа). (int)
         :param trackId: идентификатор аудиотрека, информацию о котором необходимо получить. (int)
         :param includeLyrics: флаг, указывающий, необходимо ли включать текст трека в ответ. (bool, по умолчанию `False`)
-        :return: информация об аудиотреке в виде объекта модели `Track`.
+        :return: информация об аудиотреке в виде объекта модели `Track`, или `None` (если аудиотрек не найден).
         """
 
         from asyncio import gather
@@ -41,7 +43,12 @@ class Get:
 
         id = f"{ownerId}_{trackId}"
 
-        tasks = [self._req("getById", {"audios": id})]
+        tasks = [self._req(
+            "getById",
+            {
+                "audios": id,
+            },
+        )]
 
         if includeLyrics:
             tasks.append(self.getLyrics(ownerId, trackId))
@@ -50,7 +57,7 @@ class Get:
 
         track = responses[0]
         if not track:
-            self._raiseError("trackNotFound")
+            return
 
         if includeLyrics:
             track["lyrics"] = responses[1]

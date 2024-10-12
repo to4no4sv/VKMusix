@@ -53,6 +53,6 @@ class Base:
 
 
     def __repr__(self) -> str:
-        import json
+        from json import dumps
 
-        return json.dumps(self._toDict(), indent=4, ensure_ascii=False, cls=Encoder)
+        return dumps(self._toDict(), indent=4, ensure_ascii=False, cls=Encoder)

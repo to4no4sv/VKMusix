@@ -39,7 +39,19 @@ class GetBroadcast:
         :return: аудиотрек в виде объекта модели `Track`, `None` (если ничего не проигрывается), или `False` (если музыка не транслируется в статус, работает только для текущего пользователя).
         """
 
-        broadcast = await self._req("status.get", ({"user_id": id} if id > 0 else {"group_id": -id}) if id else None)
+        broadcast = await self._req(
+            "status.get",
+            (
+                {
+                    "user_id": id,
+                }
+                if id > 0 else
+                {
+                    "group_id": -id,
+                }
+            )
+            if id else None
+        )
 
         audio = broadcast.get("audio")
         if audio:

@@ -18,7 +18,7 @@
 
 from vkmusix.errors import Error
 
-class SessionClosed(Error):
+class SessionClosed(Error, RuntimeError):
     def __init__(self) -> None:
-        self.ru = "Текущая сессия закрыта. Для отправки новых запросов потребуется создать новый объект класса `Client`"
-        self.en = "The current session is closed. To send new requests, you need to create a new instance of the `Client` class."
+        self.ru = "Текущая сессия закрыта. Для отправки новых запросов потребуется создать новый объект класса `Client` или использовать метод `reconnect`."
+        self.en = "The current session is closed. To send new requests, you need to create a new instance of the `Client` class or use `reconnect` method."

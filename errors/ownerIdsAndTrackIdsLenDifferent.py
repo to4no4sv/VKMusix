@@ -18,7 +18,7 @@
 
 from vkmusix.errors import Error
 
-class OwnerIdsAndTrackIdsLenDifferent(Error):
+class OwnerIdsAndTrackIdsLenDifferent(Error, ValueError):
     def __init__(self) -> None:
         self.ru = "Длины `ownerIds` и `trackIds` не могут отличаться."
         self.en = "The lengths of `ownerIds` and `trackIds` must be the same."

@@ -22,7 +22,7 @@ class GetSearchTrends:
     from vkmusix.aio import asyncFunction
 
     @asyncFunction
-    async def getSearchTrends(self, limit: int = 10, offset: int = 0) -> Union[List[str], str, None]:
+    async def getSearchTrends(self, limit: int = None, offset: int = None) -> Union[List[str], str, None]:
         """
         Получает самые частые поисковые запросы в музыке.
 
@@ -30,9 +30,22 @@ class GetSearchTrends:
         result = client.getSearchTrends(limit=5)\n
         print(result)
 
-        :param limit: максимальное количество запросов, которое необходимо вернуть. (int, по умолчанию 10)
+        :param limit: максимальное количество запросов, которое необходимо вернуть. (int, необязательно)
         :param offset: количество результатов, которые необходимо пропустить. (int, необязательно)
         :return: список самых частых поисковых запросов в музыке в виде строк, самый частый поисковой запрос в музыке в виде строки (если он единственный) или `None` (если поисковые запросы отсутствуют).
         """
 
-        return [item.get("name") for item in (await self._req("getSearchTrends", {"count": limit, "offset": offset})).get("items")]
+        searchTrends = await self._req(
+            "getSearchTrends",
+            {
+                "count": limit,
+                "offset": offset,
+            },
+        )
+
+        searchTrends = [item.get("name") for item in searchTrends.get("items")]
+
+        if not searchTrends:
+            return
+
+        return searchTrends if len(searchTrends) > 1 else searchTrends[0]

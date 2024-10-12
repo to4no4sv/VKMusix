@@ -18,7 +18,7 @@
 
 from vkmusix.errors import Error
 
-class RuCaptchaInvalidKey(Error):
+class RuCaptchaInvalidKey(Error, ValueError):
     def __init__(self) -> None:
         self.ru = "Недействительный ключ RuCaptcha."
         self.en = "Invalid RuCaptcha key."

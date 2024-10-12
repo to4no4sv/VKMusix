@@ -30,7 +30,7 @@ class Album(Base):
         featuredArtists (list[Artist], optional): список приглашённых артистов альбома, представленных объектами класса `Artist`.\n
         releaseYear (int, optional): год выпуска альбома.\n
         genres (list[Genre], optional): список жанров альбома, представленных объектами класса Genre.\n
-        plays (int, optional): количество прослушиваний альбома.\n
+        streams (int, optional): количество прослушиваний альбома.\n
         uploadedAt (datetime, optional): дата и время загрузки альбома (UTC +03:00).\n
         updatedAt (datetime, optional): дата и время последнего обновления информации об альбоме (UTC +03:00).\n
         photo (dict, optional): словарь с размерами и URL фотографий альбома, отсортированный по размеру.\n
@@ -80,11 +80,11 @@ class Album(Base):
                 genres[index] = Genre(genre)
         self.genres = genres if genres else None
 
-        plays = album.get("plays")
-        self.plays = plays if plays else None
+        streams = album.get("plays")
+        self.streams = streams if streams else None
 
-        followers = album.get("followers")
-        self.followers = followers if followers else None
+        saves = album.get("followers")
+        self.saves = saves if saves else None
 
         uploadedAt = album.get("create_time")
         self.uploadedAt = unixToDatetime(uploadedAt) if uploadedAt else None
@@ -124,6 +124,17 @@ class Album(Base):
 
     @asyncFunction
     async def get(self, includeTracks: bool = False) -> "Album":
+        """
+        Получает информацию об альбоме.
+
+        Пример использования:\n
+        result = album.get(includeTracks=True)\n
+        print(result)
+
+        :param includeTracks: флаг, указывающий, необходимо ли включать треки альбома в ответ. (bool, по умолчанию `False`)
+        :return: информация об альбоме в виде объекта модели `Album`.
+        """
+
         return await self._client.getAlbum(self.ownerId, self.albumId or self.playlistId, includeTracks)
 
 

@@ -18,7 +18,7 @@
 
 from vkmusix.errors import Error
 
-class InvalidMethod(Error):
+class InvalidMethod(Error, ValueError):
     def __init__(self) -> None:
         self.ru = "Некорректный метод."
         self.en = "Invalid method specified."

@@ -17,11 +17,13 @@
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
 class GetPlaylist:
+    from typing import Union
+
     from vkmusix.aio import asyncFunction
     from vkmusix.types import Playlist
 
     @asyncFunction
-    async def getPlaylist(self, playlistId: int, ownerId: int, includeTracks: bool = False) -> Playlist:
+    async def getPlaylist(self, playlistId: int, ownerId: int, includeTracks: bool = False) -> Union[Playlist, None]:
         """
         Получает информацию о плейлисте по его идентификатору.
 
@@ -32,14 +34,20 @@ class GetPlaylist:
         :param playlistId: идентификатор плейлиста, информацию о котором необходимо получить. (int)
         :param ownerId: идентификатор владельца плейлиста (пользователь или группа). (int, по умолчанию текущий пользователь)
         :param includeTracks: флаг, указывающий, необходимо ли включать треки плейлиста в ответ. (bool, по умолчанию `False`)
-        :return: информация о плейлисте в виде объекта модели `Playlist`.
+        :return: информация о плейлисте в виде объекта модели `Playlist`, или `None` (если плейлист не найден).
         """
 
         from asyncio import gather
 
         from vkmusix.types import Playlist
 
-        tasks = [self._req("getPlaylistById", {"owner_id": ownerId, "playlist_id": playlistId})]
+        tasks = [self._req(
+            "getPlaylistById",
+            {
+                "owner_id": ownerId,
+                "playlist_id": playlistId,
+            },
+        )]
 
         if includeTracks:
             tasks.append(self.getPlaylistTracks(playlistId, ownerId))
@@ -48,7 +56,7 @@ class GetPlaylist:
 
         playlist = responses[0]
         if not playlist:
-            self._raiseError("playlistNotFound")
+            return
 
         if includeTracks:
             playlist["tracks"] = responses[1]

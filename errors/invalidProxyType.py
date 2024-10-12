@@ -18,7 +18,7 @@
 
 from vkmusix.errors import Error
 
-class ProxyShouldBeDict(Error):
+class InvalidProxyType(Error, TypeError):
     def __init__(self) -> None:
-        self.ru = "Прокси должны быть словарём."
-        self.en = "Proxy should be `dict`"
+        self.ru = "Прокси должны быть представлены в виде словаря."
+        self.en = "Proxy should be `dict`."

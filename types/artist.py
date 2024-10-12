@@ -70,6 +70,18 @@ class Artist(Base):
 
     @asyncFunction
     async def get(self, includeAlbums: bool = False, includeTracks: bool = False) -> "Artist":
+        """
+        Получает информацию об артисте.
+
+        Пример использования:\n
+        result = artist.get(includeAlbums=True, includeTracks=True)\n
+        print(result)
+
+        :param includeAlbums: флаг, указывающий, необходимо ли включать альбомы артиста в ответ. (bool, по умолчанию `False`)
+        :param includeTracks: флаг, указывающий, необходимо ли включать треки артиста в ответ. (bool, умолчанию `False`)
+        :return: информация об артисте в виде объекта модели `Artist`.
+        """
+
         return await self._client.getArtist(self.id, includeAlbums, includeTracks)
 
 
@@ -84,15 +96,47 @@ class Artist(Base):
 
 
     @asyncFunction
-    async def getRelated(self, limit: int = 10) -> Union[List["Artist"], "Artist", None]:
+    async def getRelated(self, limit: int = None) -> Union[List["Artist"], "Artist", None]:
+        """
+        Получает похожих артистов.
+
+        Пример использования:\n
+        result = artist.getRelated(limit=5)\n
+        print(result)
+
+        :param limit: максимальное количество артистов, которое необходимо вернуть. (int, необязательно)
+        :return: список артистов в виде объектов модели `Artist`, артист в виде объекта модели `Artist` (если он единственственный), или None (если `artistId` неверный или похожие артисты отсутствуют).
+        """
+
         return await self._client.getRelatedArtists(self.id, limit)
 
 
     @asyncFunction
     async def follow(self) -> bool:
+        """
+        Подписывается на обновления музыки артиста.
+
+        Пример использования:\n
+        result = artist.follow()\n
+        print(result)
+
+        :param artistId: идентификатор артиста, на обновления которого необходимо подписаться. (int)
+        :return: `True`, если Вы успешно подписались на обновления музыки артиста, `False` в противном случае.
+        """
+
         return await self._client.followArtist(self.id)
 
 
     @asyncFunction
     async def unfollow(self) -> bool:
+        """
+        Отписывается от обновлений музыки артиста.
+
+        Пример использования:\n
+        result = artist.unfollow()\n
+        print(result)
+
+        :return: `True`, если Вы успешно отписались от обновлений музыки артиста, `False` в противном случае.
+        """
+
         return await self._client.unfollowArtist(self.id)

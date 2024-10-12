@@ -34,14 +34,19 @@ class GetArtist:
         :param artistId: идентификатор артиста, информацию о котором необходимо получить. (int)
         :param includeAlbums: флаг, указывающий, необходимо ли включать альбомы артиста в ответ. (bool, по умолчанию `False`)
         :param includeTracks: флаг, указывающий, необходимо ли включать треки артиста в ответ. (bool, умолчанию `False`)
-        :return: информация об артисте в виде объекта модели `Artist`, или None (если артист не найден).
+        :return: информация об артисте в виде объекта модели `Artist`, или `None` (если артист не найден).
         """
 
         from asyncio import gather
 
         from vkmusix.types import Artist
 
-        tasks = [self._req("getArtistById", {"artist_id": artistId})]
+        tasks = [self._req(
+            "getArtistById",
+            {
+                "artist_id": artistId,
+            },
+        )]
 
         if includeAlbums:
             tasks.append(self.getArtistAlbums(artistId))
@@ -54,7 +59,7 @@ class GetArtist:
         artist = responses[0]
 
         if not artist.get("name"):
-            self._raiseError("artistNotFound")
+            return
 
         if includeAlbums:
             artist["albums"] = responses[1]

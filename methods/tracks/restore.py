@@ -33,6 +33,12 @@ class Restore:
         :return: `True`, если аудиотрек успешно восстановлен, `False` в противном случае.
         """
 
-        response = await self._req("restore", {"owner_id": ownerId, "audio_id": trackId})
+        response = await self._req(
+            "restore",
+            {
+                "owner_id": ownerId,
+                "audio_id": trackId,
+            },
+        )
 
         return bool(response)

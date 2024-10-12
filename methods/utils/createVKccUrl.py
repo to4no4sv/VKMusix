@@ -36,4 +36,11 @@ class CreateVKccUrl:
 
         url = addHTTPsToUrl(url)
 
-        return (await self._req("utils.getShortLink", {"url": url})).get("short_url")
+        VKccUrl = (await self._req(
+            "utils.getShortLink",
+            {
+                "url": url,
+            },
+        )).get("short_url")
+
+        return VKccUrl

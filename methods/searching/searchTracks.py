@@ -23,7 +23,7 @@ class SearchTracks:
     from vkmusix.types import Track
 
     @asyncFunction
-    async def searchTracks(self, query: str, limit: int = 10, offset: int = 0) -> Union[List[Track], Track, None]:
+    async def searchTracks(self, query: str, limit: int = None, offset: int = None) -> Union[List[Track], Track, None]:
         """
         Ищет аудиотреки по запросу.
 
@@ -32,7 +32,7 @@ class SearchTracks:
         print(result)
 
         :param query: запрос, по которому осуществить поиск. (str)
-        :param limit: максимальное количество аудиотреков, которое необходимо вернуть. (int, по умолчанию 10)
+        :param limit: максимальное количество аудиотреков, которое необходимо вернуть. (int, необязательно)
         :param offset: количество результатов, которые необходимо пропустить. (int, необязательно)
         :return: список аудиотреков в виде объектов модели `Track`, аудиотрек в виде объекта модели `Track` (если он единственный) или `None` (если ничего не найдено).
         """

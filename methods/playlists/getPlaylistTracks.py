@@ -30,6 +30,15 @@ class GetPlaylistTracks:
         if not ownerId:
             ownerId = await getSelfId(self)
 
-        tracks = await self._client.req(f"{VK}music/playlist/{ownerId}_{playlistId}", cookies=self._cookies, headers=headers, responseType="code")
+        tracks = await self._client.req(f"{VK}music/playlist/{ownerId}_{playlistId}", cookies=self._cookies, headers=headers, responseType="response")
+        statusCode = tracks.status_code
 
-        return await self._getTracks(tracks)
+        if statusCode == 404:
+            return
+
+        elif statusCode == 302:
+            tracks = await self._client.req(f'{VK}{tracks.headers.get("Location")}', headers=headers, responseType="response")
+
+        tracks = await self._getTracks(tracks.text)
+
+        return tracks

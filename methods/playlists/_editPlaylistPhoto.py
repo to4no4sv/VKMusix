@@ -26,10 +26,19 @@ class _EditPlaylistPhoto:
 
             groupId = await getSelfId(self)
 
-        params = {"playlist_id": playlistId, "owner_id": groupId}
+        params = {
+            "playlist_id": playlistId,
+            "owner_id": groupId,
+        }
+
         if photo:
             method = "setPlaylistCoverPhoto"
-            params = {**params, **{"photo": photo}}
+            params = {
+                **params,
+                **{
+                    "photo": photo,
+                },
+            }
 
         else:
             method = "deletePlaylistCoverPhoto"

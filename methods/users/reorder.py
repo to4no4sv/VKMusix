@@ -39,10 +39,25 @@ class Reorder:
         """
 
         if not any((beforeTrackId, afterTrackId)):
-            return self._raiseError("trackReorderNeedsBeforeOrAfterArgument")
+            self._raiseError("trackReorderNeedsBeforeOrAfterArgument")
 
         if all((beforeTrackId, afterTrackId)):
-            return self._raiseError("trackReorderNeedsOnlyBeforeOrAfterNotBoth")
+            self._raiseError("trackReorderNeedsOnlyBeforeOrAfterNotBoth")
 
-        response = await self._req("reorder", {"audio_id": trackId, **({"before": beforeTrackId} if beforeTrackId else {"after": afterTrackId})})
+        response = await self._req(
+            "reorder",
+            {
+                "audio_id": trackId,
+                **(
+                    {
+                        "before": beforeTrackId,
+                    }
+                    if beforeTrackId else
+                    {
+                        "after": afterTrackId,
+                    }
+                )
+            }
+        )
+
         return bool(response)

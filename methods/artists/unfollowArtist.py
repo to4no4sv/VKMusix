@@ -22,7 +22,7 @@ class UnfollowArtist:
     @asyncFunction
     async def unfollowArtist(self, artistId: int = None) -> bool:
         """
-        Отписывается от обновлений музыки артиста.
+        Отписывается от обновлений музыки артиста по его идентификатору.
 
         Пример использования:\n
         result = client.unfollowArtist(artistId=5696274288194638935)\n
@@ -32,5 +32,11 @@ class UnfollowArtist:
         :return: `True`, если Вы успешно отписались от обновлений музыки артиста, `False` в противном случае.
         """
 
-        response = await self._req("unfollowArtist", {"artist_id": artistId})
+        response = await self._req(
+            "unfollowArtist",
+            {
+                "artist_id": artistId,
+            },
+        )
+
         return bool(response)

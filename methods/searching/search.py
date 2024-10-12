@@ -17,13 +17,13 @@
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
 class Search:
-    from typing import Union, Dict
+    from typing import Union, Dict, Type, List
 
     from vkmusix.aio import asyncFunction
     from vkmusix.types import Artist, Album, Track, Playlist
 
     @asyncFunction
-    async def search(self, query: str, limit: int = 10, offset: int = 0) -> Union[Dict[str, Union[Artist, Album, Track, Playlist]], None]:
+    async def search(self, query: str, limit: int = None, offset: int = None) -> Union[Dict[Type[Union[Artist, Album, Track, Playlist]], Union[Artist, Album, Track, Playlist, List[Union[Artist, Album, Track, Playlist]]]], None]:
         """
         Ищет артистов, альбомы, аудиотреки и плейлисты по запросу.
 
@@ -32,9 +32,9 @@ class Search:
         print(result)
 
         :param query: запрос, по которому осуществить поиск. (str)
-        :param limit: максимальное количество объектов каждого типа, которое необходимо вернуть. (int, по умолчанию 10)
+        :param limit: максимальное количество объектов каждого типа, которое необходимо вернуть. (int, необязательно)
         :param offset: количество результатов каждого типа, которые необходимо пропустить. (int, необязательно)
-        :return: словарь содержащий один, несколько или все ключи из `artists`, `albums`, `tracks`, `playlists` (если ничего не найдено, то ключ отсутствует), или `None` (если ничего не найдено). Каждый из ключей содержит список объектов этого типа в виде объектов модели или объект этого типа в виде объекта модели (если он единственный).
+        :return: словарь содержащий один, несколько или все ключи из типов `Artist`, `Album`, `Track`, `Playlist` (если ничего не найдено для данного типа, то ключ отсутствует), или `None` (если ничего не найдено). Каждый из ключей содержит список объектов этого типа или объект этого типа (если он единственный).
         """
 
         from vkmusix.types import Artist, Album, Track, Playlist

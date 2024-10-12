@@ -56,9 +56,9 @@ class GetRecommendations:
                     {
                         "target_audio": f"{ownerId}_{trackId}"
                     }
-                    if all((ownerId, trackId)) else dict()
-                )
-            }
+                    if all((ownerId, trackId)) else dict(),
+                ),
+            },
         )
 
         return self._finalizeResponse(tracks.get("items"), Track)

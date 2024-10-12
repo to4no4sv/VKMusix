@@ -24,7 +24,7 @@ class Remove:
     @asyncFunction
     async def remove(self, ownerIds: Union[int, List[int]], trackIds: Union[int, List[int]], playlistId: int = None, groupId: int = None, reValidateIds: bool = True) -> Union[Tuple[bool], bool]:
         """
-        Удаляет аудиотрек из музыки или плейлиста пользователя или группы.
+        Удаляет аудиотрек(и) из музыки или плейлиста пользователя или группы.
 
         Пример использования:\n
         result = client.remove(ownerIds=474499244, trackIds=456638035, playlistId="yourPlaylistId", groupId="yourGroupId", reValidateIds=False)\n
@@ -39,10 +39,10 @@ class Remove:
         """
 
         if type(ownerIds) != type(trackIds):
-            return self._raiseError("ownerIdsAndTrackIdsTypeDifferent")
+            self._raiseError("ownerIdsAndTrackIdsTypeDifferent")
 
         elif isinstance(ownerIds, list) and isinstance(trackIds, list) and len(ownerIds) != len(trackIds):
-            return self._raiseError("ownerIdsAndTrackIdsLenDifferent")
+            self._raiseError("ownerIdsAndTrackIdsLenDifferent")
 
         if not (isinstance(ownerIds, list) and isinstance(trackIds, list)):
             ownerIds = [ownerIds]
@@ -61,7 +61,7 @@ class Remove:
                 existTracks = await self.getTracks(groupId)
 
             if not existTracks and playlistId:
-                return (False,)
+                return False
 
             for index, (ownerId, trackId) in enumerate(zip(ownerIds, trackIds)):
                 if not playlistId:
@@ -97,7 +97,15 @@ class Remove:
 
             async def removeTrackFromPlaylist(id: str, semaphore: Semaphore) -> bool:
                 async with semaphore:
-                    response = await self._req("removeFromPlaylist", {"audio_ids": id, "owner_id": groupId, "playlist_id": playlistId})
+                    response = await self._req(
+                        "removeFromPlaylist",
+                        {
+                            "audio_ids": id,
+                            "owner_id": groupId,
+                            "playlist_id": playlistId,
+                        },
+                    )
+
                     return bool(response)
 
             tasks = [removeTrackFromPlaylist(f"{ownerId}_{trackId}", deleteSemaphore) for ownerId, trackId in zip(ownerIds, trackIds)]
@@ -105,7 +113,15 @@ class Remove:
         else:
             async def removeTrack(ownerId: int, trackId: int, semaphore: Semaphore) -> bool:
                 async with semaphore:
-                    response = await self._req("delete", {"owner_id": ownerId, "audio_id": trackId, "group_id": groupId})
+                    response = await self._req(
+                        "delete",
+                        {
+                            "owner_id": ownerId,
+                            "audio_id": trackId,
+                            "group_id": groupId,
+                        },
+                    )
+
                     return bool(response)
 
             tasks = [removeTrack(ownerId, trackId, deleteSemaphore) for ownerId, trackId in zip(ownerIds, trackIds)]

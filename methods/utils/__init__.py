@@ -16,13 +16,13 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
-from .getSelf import GetSelf
+from .getMe import GetMe
 from .createVKccUrl import CreateVKccUrl
 from .apiReq import APIReq
 from ._getTracks import _GetTracks
 
 class Utils(
-    GetSelf,
+    GetMe,
     CreateVKccUrl,
     APIReq,
     _GetTracks,

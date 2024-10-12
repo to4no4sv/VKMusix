@@ -26,10 +26,10 @@ from datetime import datetime
 from vkmusix.config import utcTz, moscowTz
 
 async def getSelfId(self: "Client") -> int:
-    if not self._selfId:
-        self._selfId = (await self.getSelf()).get("id")
+    if not self._me:
+        self._me = await self.getMe()
 
-    return self._selfId
+    return self._me.get("id")
 
 
 def unixToDatetime(seconds: int) -> datetime:

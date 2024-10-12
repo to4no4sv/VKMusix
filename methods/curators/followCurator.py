@@ -32,5 +32,11 @@ class FollowCurator:
         :return: `True`, если Вы успешно подписались на обновления музыки куратора, `False` в противном случае.
         """
 
-        response = await self._req("followCurator", {"curator_id": curatorId})
+        response = await self._req(
+            "followCurator",
+            {
+                "curator_id": curatorId,
+            },
+        )
+
         return bool(response)

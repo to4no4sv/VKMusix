@@ -18,7 +18,7 @@
 
 from vkmusix.errors import Error
 
-class MP3FileTooBig(Error):
+class MP3FileTooBig(Error, ValueError):
     def __init__(self) -> None:
         self.ru = "MP3-файл слишком большой. Максимальный размер — 200 МБ"
         self.en = "MP3 file too big. Max size is 200 MB."

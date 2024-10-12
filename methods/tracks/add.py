@@ -24,7 +24,7 @@ class Add:
     @asyncFunction
     async def add(self, ownerIds: Union[int, List[int]], trackIds: Union[int, List[int]], playlistId: int = None, groupId: int = None) -> Union[Tuple[bool], bool]:
         """
-        Добавляет аудиотрек в музыку или плейлист пользователя или группы.
+        Добавляет аудиотрек(и) в музыку или плейлист пользователя или группы.
 
         Пример использования:\n
         result = client.add(ownerIds=474499244, trackIds=456638035, playlistId="yourPlaylistId", groupId="yourGroupId")\n
@@ -58,7 +58,25 @@ class Add:
 
         results = list()
         for ownerId, trackId in zip(ownerIds, trackIds):
-            response = await self._req(method, {**({"owner_id": ownerId, "audio_id": trackId, "group_id": groupId} if not playlistId else {"owner_id": groupId, "audio_ids": f"{ownerId}_{trackId}"}), "playlist_id": playlistId})
+            response = await self._req(
+                method,
+                {
+                    **(
+                        {
+                            "owner_id": ownerId,
+                            "audio_id": trackId,
+                            "group_id": groupId,
+                        }
+                        if not playlistId else
+                        {
+                            "owner_id": groupId,
+                            "audio_ids": f"{ownerId}_{trackId}",
+                        }
+                    ),
+                    "playlist_id": playlistId,
+                },
+            )
+
             results.append(bool(response))
 
         return results[0] if len(results) == 0 else tuple(results)

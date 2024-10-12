@@ -44,7 +44,7 @@ class AddPlaylist:
 
             ownerId = await getSelfId(self)
 
-        response = await self._req(
+        playlist = await self._req(
             "followPlaylist",
             {
                 "owner_id": ownerId,
@@ -58,9 +58,15 @@ class AddPlaylist:
             }
         )
 
+        ownerId = playlist.get("owner_id")
+        playlistId = playlist.get("playlist_id")
+
+        if not all((ownerId, playlistId)):
+            return
+
         return Playlist(
             {
-                "owner_id": groupId,
+                "owner_id": ownerId,
                 "playlist_id": playlistId,
             },
             True,

@@ -26,6 +26,11 @@ class GetArtistTracks:
     async def getArtistTracks(self, artistId: int) -> Union[List[Track], Track, None]:
         from vkmusix.types import Track
 
-        tracks = await self._req("getAudiosByArtist", {"artist_id": artistId})
+        tracks = await self._req(
+            "getAudiosByArtist",
+            {
+                "artist_id": artistId,
+            },
+        )
 
         return self._finalizeResponse(tracks.get("items"), Track)

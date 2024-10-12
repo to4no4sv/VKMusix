@@ -18,7 +18,7 @@
 
 from vkmusix.errors import Error
 
-class VKUnsuccessfulLoginAttempt(Error):
+class VKUnsuccessfulLoginAttempt(Error, ValueError):
     def __init__(self) -> None:
         self.ru = "Неудачная попытка входа в ВКонтакте. Проверьте введённые `login` и (или) `password`."
         self.en = "Unsuccessful login attempt on VKontakte. Please check the entered `login` and/or `password`."

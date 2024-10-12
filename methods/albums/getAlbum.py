@@ -17,11 +17,13 @@
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
 class GetAlbum:
+    from typing import Union
+
     from vkmusix.aio import asyncFunction
     from vkmusix.types import Album
 
     @asyncFunction
-    async def getAlbum(self, ownerId: int, albumId: int, includeTracks: bool = False) -> Album:
+    async def getAlbum(self, ownerId: int, albumId: int, includeTracks: bool = False) -> Union[Album, None]:
         """
         Получает информацию об альбоме по его идентификатору.
 
@@ -32,14 +34,20 @@ class GetAlbum:
         :param ownerId: идентификатор владельца альбома (пользователь или группа). (int)
         :param albumId: идентификатор альбома, информацию о котором необходимо получить. (int)
         :param includeTracks: флаг, указывающий, необходимо ли включать треки альбома в ответ. (bool, по умолчанию `False`)
-        :return: информация об альбоме в виде объекта модели `Album`.
+        :return: информация об альбоме в виде объекта модели `Album`, или `None` (если альбом не найден).
         """
 
         from asyncio import gather
 
         from vkmusix.types import Album
 
-        tasks = [self._req("getPlaylistById", {"owner_id": ownerId, "playlist_id": albumId})]
+        tasks = [self._req(
+            "getPlaylistById",
+            {
+                "owner_id": ownerId,
+                "playlist_id": albumId,
+            },
+        )]
 
         if includeTracks:
             tasks.append(self.getAlbumTracks(ownerId, albumId))
@@ -48,7 +56,7 @@ class GetAlbum:
 
         album = responses[0]
         if not album:
-            self._raiseError("albumNotFound")
+            return
 
         if includeTracks:
             album["tracks"] = responses[1]

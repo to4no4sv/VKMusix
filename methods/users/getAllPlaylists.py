@@ -54,7 +54,10 @@ class GetAllPlaylists:
         playlistsPerReq = 10
 
         method = "getPlaylists"
-        params = {"owner_id": ownerId, "count": playlistsPerReq}
+        params = {
+            "owner_id": ownerId,
+            "count": playlistsPerReq,
+        }
         playlists_ = await self._req(method, params)
 
         playlists = [playlist for playlist in playlists_.get("items")]
@@ -64,7 +67,17 @@ class GetAllPlaylists:
         if offset < count:
             tasks = list()
             while offset < count:
-                tasks.append(self._req(method, {**params, **{"offset": offset}}))
+                tasks.append(
+                    self._req(
+                        method,
+                        {
+                            **params,
+                            **{
+                                "offset": offset,
+                            },
+                        },
+                    )
+                )
                 offset += playlistsPerReq
 
             playlists_ = await gather(*tasks)

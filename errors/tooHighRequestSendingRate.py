@@ -18,7 +18,7 @@
 
 from vkmusix.errors import Error
 
-class TooHighRequestSendingRate(Error):
+class TooHighRequestSendingRate(Error, RuntimeError):
     def __init__(self) -> None:
         self.ru = "Слишком высокая частота отправки запросов."
         self.en = "Too high request sending rate."

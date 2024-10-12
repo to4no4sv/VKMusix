@@ -23,7 +23,7 @@ class SearchArtists:
     from vkmusix.types import Artist
 
     @asyncFunction
-    async def searchArtists(self, query: str, limit: int = 10, offset: int = 0) -> Union[List[Artist], Artist, None]:
+    async def searchArtists(self, query: str, limit: int = None, offset: int = None) -> Union[List[Artist], Artist, None]:
         """
         Ищет артистов по запросу.
 
@@ -32,7 +32,7 @@ class SearchArtists:
         print(result)
 
         :param query: запрос, по которому осуществить поиск. (str)
-        :param limit: максимальное количество артистов, которое необходимо вернуть. (int, по умолчанию 10)
+        :param limit: максимальное количество артистов, которое необходимо вернуть. (int, необязательно)
         :param offset: количество результатов, которые необходимо пропустить. (int, необязательно)
         :return: список артистов в виде объектов модели `Artist`, артист в виде объекта модели `Artist` (если он единственный) или `None` (если ничего не найдено).
         """

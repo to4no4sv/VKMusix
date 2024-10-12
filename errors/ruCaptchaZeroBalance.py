@@ -18,7 +18,7 @@
 
 from vkmusix.errors import Error
 
-class RuCaptchaZeroBalance(Error):
+class RuCaptchaZeroBalance(Error, ValueError):
     def __init__(self) -> None:
         self.ru = "Отсутствие средств на балансе RuCaptcha."
         self.en = "Insufficient funds on RuCaptcha balance."

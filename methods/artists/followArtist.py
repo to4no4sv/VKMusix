@@ -22,7 +22,7 @@ class FollowArtist:
     @asyncFunction
     async def followArtist(self, artistId: int = None) -> bool:
         """
-        Подписывается на обновления музыки артиста.
+        Подписывается на обновления музыки артиста по его идентификатору.
 
         Пример использования:\n
         result = client.followArtist(artistId=5696274288194638935)\n
@@ -32,5 +32,11 @@ class FollowArtist:
         :return: `True`, если Вы успешно подписались на обновления музыки артиста, `False` в противном случае.
         """
 
-        response = await self._req("followArtist", {"artist_id": artistId})
+        response = await self._req(
+            "followArtist",
+            {
+                "artist_id": artistId,
+            },
+        )
+
         return bool(response)

@@ -44,7 +44,7 @@ class GetTracks:
 
             groupId = await getSelfId(self)
 
-        tracks = await self._client.req(VK + "audios" + str(groupId), cookies=self._cookies if hasattr(self, "_cookies") else None, headers=headers, responseType="code")
+        tracks = await self._client.req(f"{VK}audios{groupId}", cookies=self._cookies, headers=headers, responseType="code")
         tracks = await self._getTracks(tracks)
 
         return tracks

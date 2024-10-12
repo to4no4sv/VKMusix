@@ -23,7 +23,7 @@ class GetCuratorTracks:
     from vkmusix.types import Track
 
     @asyncFunction
-    async def getCuratorTracks(self, curatorId: int, limit: int = 10, offset: int = 0) -> Union[List[Track], Track, None]:
+    async def getCuratorTracks(self, curatorId: int, limit: int = None, offset: int = None) -> Union[List[Track], Track, None]:
         """
         Получает аудиотреки, принадлежащие куратору.
 
@@ -32,13 +32,20 @@ class GetCuratorTracks:
         print(result)
 
         :param curatorId: идентификатор куратора (пользователь или группа). (int)
-        :param limit: максимальное количество аудиотреков, которое необходимо вернуть. (int, по умолчанию 10)
+        :param limit: максимальное количество аудиотреков, которое необходимо вернуть. (int, необязательно)
         :param offset: количество результатов, которые необходимо пропустить. (int, необязательно)
         :return: список аудиотреков в виде объектов модели `Track`, аудиотрек в виде объекта модели `Track` (если он единственный), или `None` (если неверный `curatorId` или аудиотреки отсутствуют).
         """
 
         from vkmusix.types import Track
 
-        tracks = await self._req("getAudiosByCurator", {"curator_id": curatorId, "count": limit, "offset": offset})
+        tracks = await self._req(
+            "getAudiosByCurator",
+            {
+                "curator_id": curatorId,
+                "count": limit,
+                "offset": offset,
+            },
+        )
 
         return self._finalizeResponse(tracks.get("items"), Track)

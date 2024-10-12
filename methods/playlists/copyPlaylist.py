@@ -28,7 +28,7 @@ class CopyPlaylist:
         Копирует плейлист, принадлежий пользователю или группе в музыку пользователя или группы.
 
         Пример использования:\n
-        result = client.copyPlaylist(playlistId=1, ownerId=-215973356, groupId="yourGroupId", newTitle=None, newDescription=None, newPhoto=None)\n
+        result = client.copyPlaylist(playlistId=1, ownerId=-215973356, groupId="yourGroupId", chatId="yourChatId", newTitle=None, newDescription=None, newPhoto=None)\n
         print(result)
 
         :param playlistId: идентификатор плейлиста, который необходимо скопировать. (int)
@@ -73,6 +73,6 @@ class CopyPlaylist:
         tracks = playlist.tracks
         if tracks:
             ownerIds, trackIds = zip(*[(track.ownerId, track.trackId) for track in tracks[::-1]])
-            await newPlaylist.addTrack(list(ownerIds), list(trackIds))
+            await newPlaylist.addTracks(list(ownerIds), list(trackIds))
 
         return newPlaylist

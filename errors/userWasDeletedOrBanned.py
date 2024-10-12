@@ -18,7 +18,7 @@
 
 from vkmusix.errors import Error
 
-class UserWasDeletedOrBanned(Error):
+class UserWasDeletedOrBanned(Error, PermissionError):
     def __init__(self) -> None:
         self.ru = "Пользователь удалён или заблокирован."
         self.en = "User was deleted or banned."

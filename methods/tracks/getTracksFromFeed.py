@@ -36,9 +36,18 @@ class GetTracksFromFeed:
 
         from vkmusix.types import Track
 
-        tracks = (await self._req("getAudioIdsBySource", {"source": "feed"})).get("audios")
+        tracks = (await self._req(
+            "getAudioIdsBySource",
+            {
+                "source": "feed",
+            }
+        )).get("audios")
+
         for index, track in enumerate(tracks):
             ownerId, trackId = track.get("audio_id").split("_")[:2]
-            tracks[index] = {"owner_id": int(ownerId), "id": int(trackId)}
+            tracks[index] = {
+                "owner_id": int(ownerId),
+                "track_id": int(trackId),
+            }
 
         return self._finalizeResponse(tracks, Track)

@@ -18,7 +18,7 @@
 
 from vkmusix.errors import Error
 
-class VKInvalidToken(Error):
+class VKInvalidToken(Error, ValueError):
     def __init__(self) -> None:
         self.ru = "Недействительный токен ВКонтакте."
         self.en = "Invalid VKontakte token."

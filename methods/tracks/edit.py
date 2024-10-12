@@ -52,8 +52,8 @@ class Edit:
                 **({"artist": artist} if artist else dict()),
                 **({"lyrics": lyrics} if lyrics is not None else dict()),
                 **({"genre_id": genreId} if genreId is not None else dict()),
-                **({"no_search": removeFromSearchResults} if removeFromSearchResults is not None else dict())
-            }
+                **({"no_search": removeFromSearchResults} if removeFromSearchResults is not None else dict()),
+            },
         )
 
         return bool(response)

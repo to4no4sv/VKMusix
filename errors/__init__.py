@@ -20,6 +20,8 @@ from .error import Error
 from .unknown import Unknown
 
 from .sessionClosed import SessionClosed
+from .sessionAlreadyClosed import SessionAlreadyClosed
+from .sessionAlreadyOpened import SessionAlreadyOpened
 
 from .vkInvalidToken import VKInvalidToken
 from .vkCookieFileNotFound import VKCookieFileNotFound
@@ -43,6 +45,7 @@ from .chatNotFound import ChatNotFound
 from .artistNotFound import ArtistNotFound
 from .albumNotFound import AlbumNotFound
 from .trackNotFound import TrackNotFound
+from .lyricsNotFound import LyricsNotFound
 from .playlistNotFound import PlaylistNotFound
 
 from .noneQuery import NoneQuery
@@ -58,5 +61,5 @@ from .mp3FileTooBig import MP3FileTooBig
 
 from .tooHighRequestSendingRate import TooHighRequestSendingRate
 
-from .proxyShouldBeDict import ProxyShouldBeDict
+from .invalidProxyType import InvalidProxyType
 from .invalidProxyDict import InvalidProxyDict

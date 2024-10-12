@@ -26,7 +26,7 @@ class Playlist(Base):
         title (str): название плейлиста.\n
         subtitle (str, optional): подзаголовок плейлиста, если он присутствует.\n
         description (str, optional): описание плейлиста, если оно присутствует.\n
-        plays (int, optional): количество прослушиваний плейлиста.\n
+        streams (int, optional): количество прослушиваний плейлиста.\n
         createdAt (datetime, optional): дата и время создания плейлиста (UTC +03:00).\n
         updatedAt (datetime, optional): дата и время последнего добавления (удаления) аудиотрека в (из) плейлист(а) (UTC +03:00).\n
         photo (dict, optional): словарь с размерами и URL фотографий плейлиста, отсортированный по размеру.\n
@@ -57,11 +57,11 @@ class Playlist(Base):
         description = playlist.get("description")
         self.description = description if description else None
 
-        plays = playlist.get("plays")
-        self.plays = plays if plays else None
+        streams = playlist.get("plays")
+        self.streams = streams if streams else None
 
-        followers = playlist.get("followers")
-        self.followers = followers if followers else None
+        saves = playlist.get("followers")
+        self.saves = saves if saves else None
 
         createdAt = playlist.get("create_time")
         self.createdAt = unixToDatetime(createdAt) if createdAt else None
@@ -86,13 +86,24 @@ class Playlist(Base):
         self.ownerId = playlist.get("owner_id")
         self.playlistId = playlist.get("id") or playlist.get("playlist_id")
         self.id = f"{self.ownerId}_{self.playlistId}"
-        self.url = VK + "music/playlist/" + self.id
+        self.url = f"{VK}music/playlist/{self.id}"
 
         self.own = isOwn
 
 
     @asyncFunction
     async def get(self, includeTracks: bool = False) -> "Playlist":
+        """
+        Получает информацию о плейлисте по его идентификатору.
+
+        Пример использования:\n
+        result = playlist.get(includeTracks=True)\n
+        print(result)
+
+        :param includeTracks: флаг, указывающий, необходимо ли включать треки плейлиста в ответ. (bool, по умолчанию `False`)
+        :return: информация о плейлисте в виде объекта модели `Playlist`.
+        """
+
         return await self._client.getPlaylist(self.playlistId, self.ownerId, includeTracks)
 
 
@@ -103,29 +114,103 @@ class Playlist(Base):
 
     @asyncFunction
     async def add(self, groupId: int = None) -> Union["Playlist", None]:
+        """
+        Добавляет плейлист в музыку пользователя или группы.
+
+        Пример использования:\n
+        result = playlist.add(groupId="yourGroupId")\n
+        print(result)
+
+        :param groupId: идентификатор группы, в которую необходимо добавить плейлист. (int, необязательно)
+        :return: добавленный плейлист в виде объекта модели `Playlist` с атрибутами `ownerId`, `playlistId`, `id`, `url` и `own`, если плейлист успешно добавлен, `None` в противном случае.
+        """
+
         return await self._client.addPlaylist(self.playlistId, self.ownerId, groupId)
 
 
     @asyncFunction
-    async def remove(self, groupId: int = None) -> bool:
-        return await self._client.removePlaylist(self.playlistId, groupId)
+    async def remove(self) -> bool:
+        """
+        Удаляет плейлист из музыки пользователя или группы.
+
+        Пример использования:\n
+        result = playlist.remove()\n
+        print(result)
+
+        :return: `True`, если плейлист успешно удалён, `False` в противном случае.
+        """
+
+        return await self._client.removePlaylist(self.playlistId, self.ownerId)
 
 
     @asyncFunction
-    async def edit(self, title: Union[str, int] = None, description: Union[str, int] = None, photo: str = None, groupId: int = None) -> bool:
-        return await self._client.editPlaylist(self.playlistId, title, description, photo, groupId)
+    async def edit(self, title: Union[str, int] = None, description: Union[str, int] = None, photo: str = None) -> bool:
+        """
+        Изменяет информацию плейлиста, принадлежащего пользователю или группе.
+
+        Пример использования:\n
+        result = playlist.edit(title="prombl — npc", description="Release Date: December 24, 2021", photo="yourPhotoFilename")\n
+        print(result)
+
+        :param title: новое название плейлиста. (Необязательно)
+        :param description: новое описание плейлиста. (Необязательно)
+        :param photo: новое фото плейлиста. (Необязательно)
+        :return: `True`, если информация плейлиста успешно обновлена, `False` в противном случае.
+        """
+
+        return await self._client.editPlaylist(self.playlistId, title, description, photo, self.ownerId)
 
 
     @asyncFunction
     async def copy(self, groupId: int = None, chatId: int = None, newTitle: Union[str, None] = str(), newDescription: Union[str, None] = str(), newPhoto: Union[str, None] = str()) -> Union["Playlist", None]:
+        """
+        Копирует плейлист, принадлежий пользователю или группе в музыку пользователя или группы.
+
+        Пример использования:\n
+        result = playlist.copy(groupId="yourGroupId", chatId="yourChatId", newTitle=None, newDescription=None, newPhoto=None)\n
+        print(result)
+
+        :param groupId: идентификатор группы, в которую необходимо скопировать плейлист. (int, необязательно)
+        :param chatId: идентификатор чата, к которому небходимо привязать плейлист. (int, формат: `2000000000 + идентификатор чата`, необязательно)
+        :param newTitle: новое название плейлиста, `None` для использования текущих даты и времени. (str или None, по умолчанию оригинальное название)
+        :param newDescription: новое описание плейлиста, `None` для удаления описания. (str или None, по умолчанию оригинальное описание)
+        :param newPhoto: новая обложка плейлиста, `None` для удаления обложки. (str или None, по умолчанию оригинальная обложка)
+        :return: скопированный плейлист в виде объекта модели `Playlist` с атрибутами `ownerId`, `playlistId`, `id`, `url` и `own`, если плейлист успешно скопирован, `None` в противном случае.
+        """
+
         return await self._client.copyPlaylist(self.playlistId, self.ownerId, groupId, chatId, newTitle, newDescription, newPhoto)
 
 
     @asyncFunction
-    async def addTrack(self, ownerIds: Union[int, List[int]], trackIds: Union[int, List[int]]) -> Union[Tuple[bool], bool]:
+    async def addTracks(self, ownerIds: Union[int, List[int]], trackIds: Union[int, List[int]]) -> Union[Tuple[bool], bool]:
+        """
+        Добавляет аудиотрек в плейлист пользователя или группы.
+
+        Пример использования:\n
+        result = playlist.addTrack(ownerIds=474499244, trackIds=456638035)\n
+        print(result)
+
+        :param ownerIds: идентификатор(ы) владельца аудиотрека(ов) (пользователь или группа). (int или list)
+        :param trackIds: идентификатор(ы) аудиотрека(ов), который(е) необходимо добавить. (int или list)
+        :return: кортеж, состоящий из `True`, если аудиотрек(и) успешно добавлен(ы), `False` в противном случае.
+        """
+
         return await self._client.add(ownerIds, trackIds, self.playlistId, self.ownerId)
 
 
     @asyncFunction
-    async def removeTrack(self, ownerIds: Union[int, List[int]], trackIds: Union[int, List[int]], reValidateIds: bool = True) -> Union[Tuple[bool], bool]:
+    async def removeTracks(self, ownerIds: Union[int, List[int]], trackIds: Union[int, List[int]], reValidateIds: bool = True) -> Union[Tuple[bool], bool]:
+        """
+        Удаляет аудиотрек из плейлиста пользователя или группы.
+
+        Пример использования:\n
+        result = playlist.removeTracks(ownerIds=474499244, trackIds=456638035, reValidateIds=False)\n
+        print(result)
+
+        :param ownerIds: идентификатор(ы) владельца аудиотрека(ов) (пользователь или группа). (int или list)
+        :param trackIds: идентификатор(ы) аудиотрека(ов), который(е) необходимо удалить. (int или list)
+        :param reValidateIds: флаг, указывающий, необходимо ли перепроверить идентификатор(ы) аудитрека(ов) по находящимся в плейлисте. (bool, по умолчанию `True`)
+        :return: кортеж, состоящий из `True`, если аудиотрек(и) успешно удалён(ы), `False` в противном случае.
+        """
+
         return await self._client.remove(ownerIds, trackIds, self.playlistId, self.ownerId, reValidateIds)

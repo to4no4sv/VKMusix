@@ -18,7 +18,7 @@
 
 from vkmusix.errors import Error
 
-class OwnerIdsAndTrackIdsTypeDifferent(Error):
+class OwnerIdsAndTrackIdsTypeDifferent(Error, TypeError):
     def __init__(self) -> None:
         self.ru = "Типы `ownerIds` и `trackIds` не могут отличаться."
         self.en = "The types of `ownerIds` and `trackIds` must be the same."

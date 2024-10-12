@@ -23,7 +23,7 @@ class SearchPlaylists:
     from vkmusix.types import Playlist
 
     @asyncFunction
-    async def searchPlaylists(self, query: str, limit: int = 10, offset: int = 0) -> Union[List[Playlist], Playlist, None]:
+    async def searchPlaylists(self, query: str, limit: int = None, offset: int = None) -> Union[List[Playlist], Playlist, None]:
         """
         Ищет плейлисты по запросу.
 
@@ -32,7 +32,7 @@ class SearchPlaylists:
         print(result)
 
         :param query: запрос, по которому осуществить поиск. (str)
-        :param limit: максимальное количество плейлистов, которое необходимо вернуть. (int, по умолчанию 10)
+        :param limit: максимальное количество плейлистов, которое необходимо вернуть. (int, необязательно)
         :param offset: количество результатов, которые необходимо пропустить. (int, необязательно)
         :return: список плейлистов в виде объектов модели `Playlist`, плейлист в виде объекта модели `Playlist` (если он единственный) или `None` (если ничего не найдено).
         """

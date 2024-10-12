@@ -18,7 +18,7 @@
 
 from vkmusix.errors import Error
 
-class VKCookieFileNotFound(Error):
+class VKCookieFileNotFound(Error, FileNotFoundError):
     def __init__(self) -> None:
         self.ru = "Файл с расширением .VKCookie не найден. Если он ещё не создан, введите логин и пароль от аккаунта."
         self.en = "The file with the .VKCookie extension was not found. If it hasn't been created yet, please enter the login and password for the account."

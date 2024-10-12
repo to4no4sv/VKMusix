@@ -28,19 +28,24 @@ classes = {
 class _Search:
     from typing import Union, List, Type
 
-    async def _searchItems(self, method: str, params: tuple, itemClass: Union[List[Type[Union[Artist, Album, Track, Playlist]]], Type[Union[Artist, Album, Track, Playlist]]]) -> Union[List[Union[Artist, Album, Track, Playlist]], Artist, Album, Track, Playlist, None]:
+    async def _search(self, method: str, params: tuple, itemClass: Union[List[Type[Union[Artist, Album, Track, Playlist]]], Type[Union[Artist, Album, Track, Playlist]]]) -> Union[List[Union[Artist, Album, Track, Playlist]], Artist, Album, Track, Playlist, None]:
         query, limit, offset = params[0], params[1], params[2]
         if not query:
             return self._raiseError("noneQuery")
 
-        params = {"q": query, "count": limit, "offset": offset}
+        params = {
+            "q": query,
+            "count": limit,
+            "offset": offset,
+        }
+        
         response = await self._req(method, params)
 
         if not isinstance(response, dict):
             return
 
         if isinstance(itemClass, list):
-            results = {}
+            results = dict()
             for model, key in classes.items():
                 modelObjects = response.get(key)
                 if modelObjects:
@@ -49,7 +54,7 @@ class _Search:
                 if not modelObjects:
                     continue
 
-                results[key if key != "audios" else "tracks"] = self._finalizeResponse(modelObjects, model)
+                results[model] = self._finalizeResponse(modelObjects, model)
 
             return results if results else None
 

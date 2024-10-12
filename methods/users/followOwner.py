@@ -32,5 +32,11 @@ class FollowOwner:
         :return: `True`, если Вы успешно подписались на обновления музыки пользователя или группы, `False` в противном случае.
         """
 
-        response = await self._req("followOwner", {"owner_id": ownerId})
+        response = await self._req(
+            "followOwner",
+            {
+                "owner_id": ownerId,
+            },
+        )
+
         return bool(response)

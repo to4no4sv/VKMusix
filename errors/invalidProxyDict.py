@@ -18,7 +18,7 @@
 
 from vkmusix.errors import Error
 
-class InvalidProxyDict(Error):
+class InvalidProxyDict(Error, ValueError):
     def __init__(self) -> None:
         self.ru = "Ключи словаря с прокси должны начинаться с `http`, `https`, `socks4` или `socks5`."
         self.en = "The proxy `dict` keys must start with `http`, `https`, `socks4`, or `socks5`."

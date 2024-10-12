@@ -23,21 +23,27 @@ class GetRelatedArtists:
     from vkmusix.types import Artist
 
     @asyncFunction
-    async def getRelatedArtists(self, artistId: int, limit: int = 10) -> Union[List[Artist], Artist, None]:
+    async def getRelatedArtists(self, artistId: int, limit: int = None) -> Union[List[Artist], Artist, None]:
         """
-        Получает похожих артистов.
+        Получает похожих артистов по его идентификатору.
 
         Пример использования:\n
         result = client.getRelatedArtists(artistId=5696274288194638935, limit=5)\n
         print(result)
 
         :param artistId: идентификатор артиста, похожих на которого необходимо получить. (int)
-        :param limit: максимальное количество артистов, которое необходимо вернуть. (bool, по умолчанию 10)
+        :param limit: максимальное количество артистов, которое необходимо вернуть. (int, необязательно)
         :return: список артистов в виде объектов модели `Artist`, артист в виде объекта модели `Artist` (если он единственственный), или None (если `artistId` неверный или похожие артисты отсутствуют).
         """
 
         from vkmusix.types import Artist
 
-        artists = await self._req("getRelatedArtistsById", {"artist_id": artistId, "count": limit})
+        artists = await self._req(
+            "getRelatedArtistsById",
+            {
+                "artist_id": artistId,
+                "count": limit,
+            },
+        )
 
         return self._finalizeResponse(artists.get("artists"), Artist)

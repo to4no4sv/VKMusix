@@ -23,7 +23,7 @@ class SearchAlbums:
     from vkmusix.types import Album
 
     @asyncFunction
-    async def searchAlbums(self, query: str, limit: int = 10, offset: int = 0) -> Union[List[Album], Album, None]:
+    async def searchAlbums(self, query: str, limit: int = None, offset: int = None) -> Union[List[Album], Album, None]:
         """
         Ищет альбомы по запросу.
 
@@ -32,7 +32,7 @@ class SearchAlbums:
         print(result)
 
         :param query: запрос, по которому осуществить поиск. (str)
-        :param limit: максимальное количество альбомов, которое необходимо вернуть. (int, по умолчанию 10)
+        :param limit: максимальное количество альбомов, которое необходимо вернуть. (int, необязательно)
         :param offset: количество результатов, которые необходимо пропустить. (int, необязательно)
         :return: список альбомов в виде объектов модели `Album`, альбом в виде объекта модели `Album` (если он единственный) или `None` (если ничего не найдено).
         """

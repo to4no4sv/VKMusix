@@ -20,5 +20,5 @@ from vkmusix.errors import NotFound
 
 class TrackNotFound(NotFound):
     def __init__(self) -> None:
-        self.ru = "Аудиотрек не найден. Проверьте введённые `ownerId` и (или) `trackId`"
+        self.ru = "Аудиотрек не найден. Проверьте введённые `ownerId` и (или) `trackId`."
         self.en = "Track not found. Please check the entered `ownerId` and/or `trackId`."

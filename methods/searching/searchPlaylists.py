@@ -39,4 +39,4 @@ class SearchPlaylists:
 
         from vkmusix.types import Playlist
 
-        return await self._searchItems("searchPlaylists", (query, limit, offset), Playlist)
+        return await self._search("searchPlaylists", (query, limit, offset), Playlist)

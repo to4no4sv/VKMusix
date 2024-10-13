@@ -39,4 +39,4 @@ class SearchArtists:
 
         from vkmusix.types import Artist
 
-        return await self._searchItems("searchArtists", (query, limit, offset), Artist)
+        return await self._search("searchArtists", (query, limit, offset), Artist)

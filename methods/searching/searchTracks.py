@@ -39,4 +39,4 @@ class SearchTracks:
 
         from vkmusix.types import Track
 
-        return await self._searchItems("search", (query, limit, offset), Track)
+        return await self._search("search", (query, limit, offset), Track)

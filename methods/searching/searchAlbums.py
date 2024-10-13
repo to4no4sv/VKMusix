@@ -39,4 +39,4 @@ class SearchAlbums:
 
         from vkmusix.types import Album
 
-        return await self._searchItems("searchAlbums", (query, limit, offset), Album)
+        return await self._search("searchAlbums", (query, limit, offset), Album)

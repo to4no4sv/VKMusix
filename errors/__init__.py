@@ -42,11 +42,6 @@ from .trackRestorationTimeEnded import TrackRestorationTimeEnded
 
 from .notFound import NotFound
 from .chatNotFound import ChatNotFound
-from .artistNotFound import ArtistNotFound
-from .albumNotFound import AlbumNotFound
-from .trackNotFound import TrackNotFound
-from .lyricsNotFound import LyricsNotFound
-from .playlistNotFound import PlaylistNotFound
 
 from .noneQuery import NoneQuery
 

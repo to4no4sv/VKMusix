@@ -21,8 +21,8 @@ import asyncio
 
 import httpx
 
-from .aio import asyncFunction
-from .utils import addHTTPsToUrl
+from vkmusix.aio import asyncFunction
+from vkmusix.utils import addHTTPsToUrl
 
 retries = 5
 timeout = 20
@@ -33,7 +33,7 @@ class Client:
         self.client = client
 
     @asyncFunction
-    async def request(self, url: str, params: dict = None, json: dict = None, cookies: dict = None, headers: dict = None, files: dict = None, responseType: str = "json", method: str = "GET") -> any:
+    async def request(self, url: str, params: dict = None, json: dict = None, data: any = None, cookies: dict = None, headers: dict = None, files: dict = None, responseType: str = "json", method: str = "GET") -> any:
         responseType = responseType.lower()
         retriesLocal = retries
 
@@ -50,9 +50,9 @@ class Client:
                 response = await self.client.request(
                     method,
                     url,
-                    params=params if method == "GET" else None,
-                    data=params if method == "POST" else None,
+                    params=params,
                     json=json,
+                    data=data,
                     cookies=cookies,
                     headers=headers,
                     files=files,

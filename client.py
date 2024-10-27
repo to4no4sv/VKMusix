@@ -299,14 +299,8 @@ class Client(
             elif errorCode == 18:
                 self._raiseError("userWasDeletedOrBanned")
 
-            elif errorCode == 100:
+            elif errorCode == [100, 104]:
                 return
-
-            elif errorCode == 104:
-                if method == "audio.getLyrics":
-                    self._raiseError("lyricsNotFound")
-
-                self._raiseError("notFound")
 
             else:
                 return error

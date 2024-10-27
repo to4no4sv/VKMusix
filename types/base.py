@@ -44,7 +44,7 @@ class Base:
 
         result = dict()
         for key, value in self.__dict__.items():
-            if any((value is None, isinstance(value, (FunctionType, MethodType)), key == "_client")):
+            if any((value is None, all((key == "fullTitle", not self.subtitle)), isinstance(value, (FunctionType, MethodType)), key in ["_client", "raw"])):
                 continue
 
             result[key if not key.startswith("_") else key[1:]] = value

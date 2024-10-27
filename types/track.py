@@ -271,7 +271,7 @@ class Track(Base):
     @asyncFunction
     async def setBroadcast(self, groupIds: Union[List[str], str] = None) -> bool:
         """
-        Устанавливает (удаляет) аудиотрек в (из) статус(а) пользователя или группы.
+        Устанавливает аудиотрек в статус пользователя или группы.
 
         Пример использования для установки аудиотрека в статус пользователя:\n
         result = track.setBroadcast()\n
@@ -281,16 +281,8 @@ class Track(Base):
         result = track.setBroadcast(groupdIds="yourGroupId")\n
         print(result)
 
-        Пример использования для удаления аудиотрека из статуса пользователя:\n
-        result = track.setBroadcast()\n
-        print(result)
-
-        Пример использования для удаления аудиотрека из статуса группы:\n
-        result = track.setBroadcast(groupdIds="yourGroupId")\n
-        print(result)
-
-        :param groupIds: идентификатор(ы) групп(ы), в (из) статус(а) которой необходимо установить (удалить) аудиотрек. (int, по умолчанию текущий пользователь)
-        :return: `True`, если аудиотрек успешно установлен (удалён) в (из) статус(а), `False` в противном случае.
+        :param groupIds: идентификатор(ы) групп(ы), в статус которой(ых) необходимо установить аудиотрек. (int, по умолчанию текущий пользователь)
+        :return: `True`, если аудиотрек успешно установлен в статус, `False` в противном случае.
         """
 
         return await self._client.setBroadcast(self.ownerId, self.trackId, groupIds)

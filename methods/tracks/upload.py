@@ -87,8 +87,8 @@ class Upload:
                 "audio": audio,
                 "hash": hash,
                 "title": title,
-                "artist": artist
-            }
+                "artist": artist,
+            },
         )
 
         track = self._finalizeResponse(track, Track)

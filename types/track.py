@@ -48,6 +48,8 @@ class Track(Base):
     from vkmusix.aio import asyncFunction
 
     def __init__(self, track: dict, releaseTrack: bool = False, client: "Client" = None) -> None:
+        import html
+
         from vkmusix.config import VK
         from vkmusix.utils import unixToDatetime
 
@@ -57,17 +59,16 @@ class Track(Base):
 
         super().__init__(client)
 
-        self.title = track.get("title")
-        self.subtitle = track.get("subtitle")
-
         title = track.get("title")
-        self.title = title if title else None
+        self.title = html.unescape(title) if title else None
 
         subtitle = track.get("subtitle")
-        self.subtitle = subtitle if subtitle else None
+        self.subtitle = html.unescape(subtitle.replace("\n", " ")) if subtitle else None
+
+        self.fullTitle = f"{self.title} ({self.subtitle})".replace("((", "(").replace("))", ")").replace("([", "(").replace("])", ")") if self.subtitle else self.title
 
         artist = track.get("artist")
-        self.artist = artist if artist else None
+        self.artist = html.unescape(artist) if artist else None
 
         mainArtists = track.get("main_artists")
         self.artists = [Artist(mainArtist, client=self._client) for mainArtist in mainArtists] if mainArtists else None
@@ -107,13 +108,22 @@ class Track(Base):
 
             if releaseTrackId:
                 releaseTrackOwnerId, releaseTrackTrackId = tuple(map(int, releaseTrackId.split("_")))
-                self.releaseTrack = Track({"owner_id": releaseTrackOwnerId, "track_id": releaseTrackTrackId}, True, client=self._client)
+                self.releaseTrack = Track(
+                    {
+                        "owner_id": releaseTrackOwnerId,
+                        "track_id": releaseTrackTrackId,
+                    },
+                    True,
+                    client=self._client,
+                )
 
         self.ownerId = track.get("owner_id")
         self.trackId = track.get("id") or track.get("track_id")
 
         self.id = f"{self.ownerId}_{self.trackId}"
         self.url = VK + f"audio{self.id}"
+
+        self.raw = track
 
 
     @asyncFunction

@@ -299,8 +299,11 @@ class Client(
             elif errorCode == 18:
                 self._raiseError("userWasDeletedOrBanned")
 
-            elif errorCode == [100, 104]:
+            elif errorCode == 100:
                 return
+
+            elif errorCode == 104:
+                self._raiseError("notFound")
 
             else:
                 return error
@@ -381,11 +384,6 @@ class Client(
 
             "notFound": NotFound,
             "chatNotFound": ChatNotFound,
-            "artistNotFound": ArtistNotFound,
-            "albumNotFound": AlbumNotFound,
-            "trackNotFound": TrackNotFound,
-            "lyricsNotFound": LyricsNotFound,
-            "playlistNotFound": PlaylistNotFound,
 
             "noneQuery": NoneQuery,
 

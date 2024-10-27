@@ -23,17 +23,14 @@ class GetLyrics:
 
     @asyncFunction
     async def getLyrics(self, ownerId: int, trackId: int) -> Union[str, None]:
-        from vkmusix.errors import LyricsNotFound
+        lyrics = await self._req(
+            "getLyrics",
+            {
+                "audio_id": f"{ownerId}_{trackId}",
+            },
+        )
 
-        try:
-            lyrics = await self._req(
-                "getLyrics",
-                {
-                    "audio_id": f"{ownerId}_{trackId}",
-                },
-            )
-
-        except LyricsNotFound:
+        if not lyrics:
             return
 
         lyrics = lyrics.get("lyrics")

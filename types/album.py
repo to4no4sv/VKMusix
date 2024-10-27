@@ -48,6 +48,8 @@ class Album(Base):
     from vkmusix.types.track import Track
 
     def __init__(self, album: dict, playlist: bool = False, client: "Client" = None) -> None:
+        import html
+
         from vkmusix.config import VK
         from vkmusix.utils import unixToDatetime
 
@@ -57,10 +59,12 @@ class Album(Base):
         super().__init__(client)
 
         title = album.get("title")
-        self.title = title if title else None
+        self.title = html.unescape(title) if title else None
 
         subtitle = album.get("subtitle")
-        self.subtitle = subtitle if subtitle else None
+        self.subtitle = html.unescape(subtitle.replace("\n", " ")) if subtitle else None
+
+        self.fullTitle = f"{self.title} ({self.subtitle})".replace("((", "(").replace("))", ")").replace("([", "(").replace("])", ")") if self.subtitle else self.title
 
         description = album.get("description")
         self.description = description if description else None
@@ -120,6 +124,8 @@ class Album(Base):
             self.playlistId = album.get("id") or album.get("playlist_id") or album.get("album_id")
             self.id = f"{self.ownerId}_{self.playlistId}"
             self.url = VK + "music/playlist/" + self.id
+
+        self.raw = album
 
 
     @asyncFunction

@@ -39,12 +39,14 @@ class Artist(Base):
 
     def __init__(self, artist: dict, client: "Client" = None) -> None:
         import re
+        import html
 
         from vkmusix.config import VK
 
         super().__init__(client)
 
-        self.nickname = artist.get("name")
+        nickname = artist.get("name")
+        self.nickname = html.unescape(nickname) if nickname else None
 
         photo = artist.get("photo")
         if photo:
@@ -66,6 +68,8 @@ class Artist(Base):
 
         else:
             self.url = None
+
+        self.raw = artist
 
 
     @asyncFunction

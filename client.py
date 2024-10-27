@@ -64,6 +64,17 @@ class Client(
 
 
     def __init__(self, token: str = None, RuCaptchaKey: str = None, language: Language = None, proxies: dict = None, login: str = None, password: str = None, cookieFilename: str = None) -> None:
+        import sys
+        if sys.version_info < (3, 6):
+            ruWarning = "Внимание: Работоспособость этой библиотеки гарантируется только при Python 3.6 или выше. Вы используете версию {}."
+            enWarning = "Attention: The functionality of this library is guaranteed only for Python 3.6 or higher. You are using version {}."
+
+            from warnings import warn
+            warn(
+                (ruWarning if self._language == Language.Russian else (enWarning if self._language == Language.English else "🇷🇺: " + ruWarning + " 🇬🇧: " + enWarning)).format(str(sys.version_info.major) + "." + str(sys.version_info.minor)),
+                UserWarning,
+            )
+
         if not token:
             token = input("Получите токен ВКонтакте с правами на аудиозаписи и доступ в любое время на сайте `https://vkhost.github.io/` (приложение VK Admin) и отправьте его: ")
 
@@ -88,17 +99,6 @@ class Client(
                 newProxies[scheme] = (scheme if "://" not in proxyURL else str()) + proxyURL
 
             self._proxies = newProxies
-
-        import sys
-        if sys.version_info < (3, 6):
-            ruWarning = "Внимание: Работоспособость этой библиотеки гарантируется только при Python 3.6 или выше. Вы используете версию {}."
-            enWarning = "Attention: The functionality of this library is guaranteed only for Python 3.6 or higher. You are using version {}."
-
-            from warnings import warn
-            warn(
-                (ruWarning if self._language == Language.Russian else (enWarning if self._language == Language.English else "🇷🇺: " + ruWarning + " 🇬🇧: " + enWarning)).format(str(sys.version_info.major) + "." + str(sys.version_info.minor)),
-                UserWarning
-            )
 
         if login or cookieFilename:
             cookieFileExist = False
@@ -150,7 +150,7 @@ class Client(
                 from warnings import warn
                 warn(
                     ruWarning if self._language == Language.Russian else (enWarning if self._language == Language.English else "🇷🇺: " + ruWarning + " 🇬🇧: " + enWarning),
-                    UserWarning
+                    UserWarning,
                 )
 
 
@@ -171,7 +171,7 @@ class Client(
             from warnings import warn
             warn(
                 ruWarning if self._language == Language.Russian else (enWarning if self._language == Language.English else "🇷🇺: " + ruWarning + " 🇬🇧: " + enWarning),
-                UserWarning
+                UserWarning,
             )
 
 
@@ -228,6 +228,7 @@ class Client(
         self._client = WebClient(self._session)
 
 
+    @asyncFunction
     async def _req(self, method: str, params: dict = None, HTTPMethod: str = "GET") -> Union[dict, None]:
         if self._closed:
             self._raiseError("sessionClosed")
@@ -272,12 +273,12 @@ class Client(
                 self._raiseError("chatNotFound")
 
             elif errorCode == 14:
-                captchaImg = error.get("captcha_img")
+                captchaUrl = error.get("captcha_img")
                 if self._RuCaptchaKey:
-                    solve = await self._solveCaptcha(captchaImg)
+                    solve = await self._solveCaptcha(captchaUrl)
 
                 else:
-                    solve = input(captchaImg + "\nВведите решение капчи: ")
+                    solve = input(captchaUrl + "\nВведите решение капчи: ")
 
                 fullParams.update(
                     {
@@ -298,6 +299,9 @@ class Client(
             elif errorCode == 18:
                 self._raiseError("userWasDeletedOrBanned")
 
+            elif errorCode == 100:
+                return
+
             elif errorCode == 104:
                 if method == "audio.getLyrics":
                     self._raiseError("lyricsNotFound")
@@ -313,8 +317,9 @@ class Client(
         return req
 
 
-    async def _solveCaptcha(self, captchaImg: str) -> str:
-        imageBytes = await self._client.req(captchaImg, responseType="file")
+    @asyncFunction
+    async def _solveCaptcha(self, captchaUrl: str) -> str:
+        imageBytes = await self._client.req(captchaUrl, responseType="file")
         captchaImageInBase64 = base64.b64encode(imageBytes).decode("utf-8")
 
         RuCaptchaParams = {

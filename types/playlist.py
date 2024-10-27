@@ -43,16 +43,20 @@ class Playlist(Base):
     from vkmusix.types.track import Track
 
     def __init__(self, playlist: dict, isOwn: bool = False, client: "Client" = None) -> None:
+        import html
+
         from vkmusix.config import VK
         from vkmusix.utils import unixToDatetime
 
         super().__init__(client)
 
         title = playlist.get("title")
-        self.title = title if title else None
+        self.title = html.unescape(title) if title else None
 
         subtitle = playlist.get("subtitle")
-        self.subtitle = subtitle if subtitle else None
+        self.subtitle = html.unescape(subtitle.replace("\n", " ")) if subtitle else None
+
+        self.fullTitle = f"{self.title} ({self.subtitle})".replace("((", "(").replace("))", ")").replace("([", "(").replace("])", ")") if self.subtitle else self.title
 
         description = playlist.get("description")
         self.description = description if description else None
@@ -89,6 +93,8 @@ class Playlist(Base):
         self.url = f"{VK}music/playlist/{self.id}"
 
         self.own = isOwn
+
+        self.raw = playlist
 
 
     @asyncFunction

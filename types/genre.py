@@ -63,3 +63,5 @@ class Genre(Base):
             self.title = genre.get("name")
 
             self.id = genre.get("id") or genre.get("genre_id")
+
+        self.raw = genre

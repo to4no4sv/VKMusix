@@ -20,5 +20,5 @@ from vkmusix.errors import Error
 
 class MP3FileNotFound(Error, FileNotFoundError):
     def __init__(self) -> None:
-        self.ru = "MP3-файл с аудиотреком не найден. Убедитесь, что вы указали правильное название файла."
+        self.ru = "MP3-файл с треком не найден. Убедитесь, что вы указали правильное название файла."
         self.en = "The MP3 file with the track was not found. Please make sure you have specified the correct filename."

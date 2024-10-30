@@ -17,26 +17,38 @@
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
 class FollowOwner:
-    from vkmusix.aio import asyncFunction
+    from vkmusix.aio import async_
 
-    @asyncFunction
-    async def followOwner(self, ownerId: int = None) -> bool:
+    @async_
+    async def followOwner(self, ownerId: int) -> bool:
         """
         Подписывается на обновления музыки пользователя или группы.
 
-        Пример использования:\n
-        result = client.followOwner(ownerId=-215973356)\n
-        print(result)
+        `Пример использования`:
 
-        :param ownerId: идентификатор пользователя или группы, на обновления которого(ой) необходимо подписаться. (int)
-        :return: `True`, если Вы успешно подписались на обновления музыки пользователя или группы, `False` в противном случае.
-        """
-
-        response = await self._req(
-            "followOwner",
-            {
-                "owner_id": ownerId,
-            },
+        result = client.followOwner(
+            ownerId=-28905875,
         )
 
+        print(result)
+
+        :param ownerId: идентификатор owner'а (пользователь или группа). (``int``)
+        :return: `При успехе`: ``True``. `Если owner (пользователь или группа) не найден`: ``False``.
+        """
+
+        from vkmusix.errors import NotFound
+
+        try:
+            response = await self._req(
+                "followOwner",
+                {
+                    "owner_id": ownerId,
+                },
+            )
+
+        except NotFound:
+            return False
+
         return bool(response)
+
+    follow_owner = followOwner

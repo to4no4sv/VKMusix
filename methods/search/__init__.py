@@ -16,25 +16,23 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
-class GetAlbumTracks:
-    from typing import Union, List
+from .search import Search
+from .searchArtists import SearchArtists
+from .searchAlbums import SearchAlbums
+from .searchTracks import SearchTracks
+from .searchPlaylists import SearchPlaylists
+from ._search import _Search
 
-    from vkmusix.aio import asyncFunction
-    from vkmusix.types import Track
+from .getSearchTrends import GetSearchTrends
 
-    @asyncFunction
-    async def getAlbumTracks(self, ownerId: int, albumId: int) -> Union[List[Track], Track, None]:
-        from vkmusix.config import VK, headers
+class Search(
+    Search,
+    SearchArtists,
+    SearchAlbums,
+    SearchTracks,
+    SearchPlaylists,
+    _Search,
 
-        tracks = await self._client.req(f"{VK}music/album/{ownerId}_{albumId}", headers=headers, responseType="response")
-        statusCode = tracks.status_code
-
-        if statusCode == 404:
-            return
-
-        elif statusCode == 302:
-            tracks = await self._client.req(f'{VK}{tracks.headers.get("Location")}', headers=headers, responseType="response")
-
-        tracks = await self._getTracks(tracks.text)
-
-        return tracks
+    GetSearchTrends,
+):
+    pass

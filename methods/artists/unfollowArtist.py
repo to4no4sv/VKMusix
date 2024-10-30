@@ -17,19 +17,23 @@
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
 class UnfollowArtist:
-    from vkmusix.aio import asyncFunction
+    from vkmusix.aio import async_
 
-    @asyncFunction
+    @async_
     async def unfollowArtist(self, artistId: int = None) -> bool:
         """
-        Отписывается от обновлений музыки артиста по его идентификатору.
+        Отписывается от обновлений музыки артиста.
 
-        Пример использования:\n
-        result = client.unfollowArtist(artistId=5696274288194638935)\n
+        `Пример использования`:
+
+        result = client.unfollowArtist(
+            artistId=5696274288194638935,
+        )
+
         print(result)
 
-        :param artistId: идентификатор артиста, от обновлений которого необходимо отписаться. (int)
-        :return: `True`, если Вы успешно отписались от обновлений музыки артиста, `False` в противном случае.
+        :param artistId: идентификатор артиста. (``int``)
+        :return: `При успехе`: ``True``. `Если артист не найден`: ``False``.
         """
 
         response = await self._req(
@@ -40,3 +44,5 @@ class UnfollowArtist:
         )
 
         return bool(response)
+
+    unfollow_artist = unfollowArtist

@@ -51,7 +51,7 @@ class SyncToAsync:
             set_event_loop(loop)
 
 
-def asyncFunction(func: any) -> any:
+def async_(func: any) -> any:
     from functools import wraps
 
     @wraps(func)

@@ -17,26 +17,38 @@
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
 class UnfollowOwner:
-    from vkmusix.aio import asyncFunction
+    from vkmusix.aio import async_
 
-    @asyncFunction
-    async def unfollowOwner(self, ownerId: int = None) -> bool:
+    @async_
+    async def unfollowOwner(self, ownerId: int) -> bool:
         """
         Отписывается от обновлений музыки пользователя или группы.
 
-        Пример использования:\n
-        result = client.unfollowOwner(ownerId=-215973356)\n
-        print(result)
+        `Пример использования`:
 
-        :param ownerId: идентификатор пользователя или группы, от обновлений которого(ой) необходимо отписаться. (int)
-        :return: `True`, если Вы успешно отписались на обновлений музыки пользователя или группы, `False` в противном случае.
-        """
-
-        response = await self._req(
-            "followOwner",
-            {
-                "owner_id": ownerId,
-            },
+        result = client.unfollowOwner(
+            ownerId=-28905875,
         )
 
+        print(result)
+
+        :param ownerId: идентификатор owner'а (пользователь или группа). (``int``)
+        :return: `При успехе`: ``True``. `Если owner (пользователь или группа) не найден`: ``False``.
+        """
+
+        from vkmusix.errors import NotFound
+
+        try:
+            response = await self._req(
+                "unfollowOwner",
+                {
+                    "owner_id": ownerId,
+                },
+            )
+
+        except NotFound:
+            return False
+
         return bool(response)
+
+    unfollow_owner = unfollowOwner

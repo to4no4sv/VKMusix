@@ -19,20 +19,36 @@
 class Download:
     from typing import Union
 
-    from vkmusix.aio import asyncFunction
+    from vkmusix.aio import async_
     from vkmusix.types import Track
+    from vkmusix.enums import Extension
 
-    @asyncFunction
-    async def download(self, ownerId: int = None, trackId: int = None, filename: str = None, directory: str = None, track: Track = None) -> Union[str, None]:
+    @async_
+    async def download(self, ownerId: int = None, trackId: int = None, filename: str = None, directory: str = None, extension: Extension = None, metadata: bool = False, track: Track = None) -> Union[str, None]:
         """
-        Загружает аудиотрек в формате MP3.
+        Скачивает трек.
 
-        :param ownerId: идентификатор владельца аудиотрека (пользователь или группа). (int, необязательно)
-        :param trackId: идентификатор аудиотрека, информацию о котором необходимо получить. (int, необязательно)
-        :param filename: название файла с аудиотреком. (str, по умолчанию `{artist} -- {title}`)
-        :param directory: путь к директории, в которую загрузить файл. (str, по умолчанию `os.getcwd()`)
-        :param track: объект класса `Track`, представляющий аудиотрек. (Track, необязательно)
-        :return: полный путь к загруженному файлу, если аудиотрек успешно загружен, иначе `None`.
+        `Пример использования`:
+
+        from vkmusix.enums import Extension
+
+        path = client.download(
+            ownerId=-2001471901,
+            trackId=123471901,
+            extension=Extension.OPUS,
+            metadata=True,
+        )
+
+        print(path)
+
+        :param ownerId: идентификатор владельца трека. (``int``)
+        :param trackId: идентификатор трека. (``int``)
+        :param filename: имя файла с треком. По умолчанию ``{artist} — {fullTitle}``. Поддерживаемые переменные для динамического имени: ``artist``, ``title``, ``subtitle``, ``fullTitle``, ``album``. Пример динамического имени файла: ``{artist} - {title} ({album})``. (``str``, `optional`)
+        :param directory: путь к директории, в которую загрузить трек. (``str``, `optional`)
+        :param extension: расширение файла с треком. По умолчанию ``Extension.MP3``. (``enums.Extension``, `optional`)
+        :param metadata: флаг, указывающий, необходимо ли добавить метаданные (артист, название, альбом, обложка) к файлу с треком. По умолчанию ``False``. Игнорируется, если параметр ``extension`` равен ``Extension.TS``. (``bool``, `optional`)
+        :param track: трек. (``types.Track``, `optional`)
+        :return: `При успехе`: полный путь к загруженному файлу (``str``). `Если трек не найден или недоступен для загрузки`: ``None``.
         """
 
         from asyncio import create_task, gather
@@ -49,6 +65,7 @@ class Download:
         import av
 
         from vkmusix.types import Track
+        from vkmusix.enums import Extension
 
         if not any((all((ownerId, trackId)), all((track, isinstance(track, Track))))):
             return
@@ -61,7 +78,7 @@ class Download:
             if not track.fileUrl:
                 return
 
-        async def downloadSegment(segmentUrlLocal: str, keyLocal: str, ivLocal: bytes) -> None:
+        async def downloadSegment(segmentUrlLocal: str, keyLocal: bytes, ivLocal: bytes) -> None:
             segmentData = await self._client.req(segmentUrlLocal, responseType="response")
             while segmentData.status_code in (301, 302):
                 segmentData = await self._client.req(segmentData.headers.get("Location"), responseType="response")
@@ -87,7 +104,28 @@ class Download:
         else:
             os.makedirs(directory, exist_ok=True)
 
-        filename = (filename if not filename.endswith(".mp3") else filename[:-4]) if filename else f"{track.artist} -- {track.title}"
+        extension = extension.value if extension and isinstance(extension, Extension) else "mp3"
+
+        if not filename:
+            filename = f"{track.artist} — {track.fullTitle}"
+
+        else:
+            filename = filename if not filename.endswith(f".{extension}") else filename[:-(len(extension) + 1)]
+
+            if "{subtitle}" in filename and not track.subtitle:
+                filename = filename.replace("{subtitle}", str())
+
+            if "{album}" in filename and not track.album:
+                filename = filename.replace("{album}", str())
+
+            filename = filename.format(
+                artist=track.artist,
+                title=track.title,
+                subtitle=track.subtitle,
+                fullTitle=track.fullTitle,
+                album=track.album.title if track.album else None,
+            )
+
         filename = re.sub(r'[<>:"/\\|?*]', str(), filename)
         filename = os.path.join(directory, filename)
 
@@ -140,25 +178,117 @@ class Download:
             if buffer:
                 await outfile.write(buffer)
 
-        try:
-            inputContainer = av.open(f"{filename}.ts")
-            outputContainer = av.open(f"{filename}.mp3", mode="w", format="mp3")
+        if extension != "ts":
+            try:
+                inputContainer = av.open(f"{filename}.ts")
+                outputContainer = av.open(f"{filename}.{extension}", mode="w", format=extension)
 
-            inputStream = inputContainer.streams.audio[0]
-            outputStream = outputContainer.add_stream("mp3", rate=inputStream.rate)
-            outputStream.channels = inputStream.channels
+                inputStream = inputContainer.streams.audio[0]
+                outputStream = outputContainer.add_stream(extension, rate=inputStream.rate)
 
-            for packet in inputContainer.demux(inputStream):
-                if packet.stream == inputStream and packet.stream_index == inputStream.index:
-                    outputContainer.mux(packet)
+                if extension == "opus":
+                    outputStream.codec_context.options = {
+                        "strict": "experimental",
+                    }
 
-            inputContainer.close()
-            outputContainer.close()
+                for packet in inputContainer.demux(inputStream):
+                    if packet.stream == inputStream and packet.stream_index == inputStream.index:
+                        if extension == "opus":
+                            if packet.size > 0:
+                                try:
+                                    for frame in packet.decode():
+                                        newPacket = outputStream.encode(frame)
 
-        except av.InvalidDataError:
-            return
+                                        if newPacket:
+                                            outputContainer.mux(newPacket)
 
-        finally:
-            await aiofiles.os.remove(f"{filename}.ts")
+                                except av.error.InvalidDataError:
+                                    pass
+                        else:
+                            outputContainer.mux(packet)
 
-        return f"{filename}.mp3"
+                inputContainer.close()
+                outputContainer.close()
+
+            except (av.InvalidDataError, av.ValueError):
+                return
+
+            finally:
+                await aiofiles.os.remove(f"{filename}.ts")
+
+            if metadata:
+                album = track.album
+                photo = album.photo if album else None
+
+                coverData = await self._client.req(
+                    photo.get(1200) or photo.get(600) or photo.get(300) or photo.get(270),
+                    responseType="file",
+                ) if photo else None
+
+                if extension == "mp3":
+                    from mutagen.id3 import ID3, APIC, TIT2, TPE1, TALB
+                    from mutagen.mp3 import MP3
+
+                    audio = MP3(f"{filename}.{extension}", ID3=ID3)
+                    audio.update(
+                        {
+                            **{
+                                "TIT2": TIT2(encoding=3, text=[track.fullTitle]),
+                                "TPE1": TPE1(encoding=3, text=[track.artist]),
+                            },
+                            **({
+                                "TALB": TALB(encoding=3, text=[album.title]),
+                            } if album else dict()),
+                        },
+                    )
+
+                    if coverData:
+                        audio.tags.add(
+                            APIC(
+                                encoding=3,
+                                mime="image/jpeg",
+                                type=3,
+                                desc=u"Cover",
+                                data=coverData,
+                            )
+                        )
+
+                    audio.save()
+
+                elif extension == "opus":
+                    from mutagen.oggopus import OggOpus
+
+                    audio = OggOpus(f"{filename}.{extension}")
+                    audio.update(
+                        {
+                            "title": track.fullTitle,
+                            "artist": track.artist,
+                            **({
+                                "album": album.title,
+                            } if album else dict()),
+                        },
+                    )
+
+                    if coverData:
+                        import base64
+                        from mutagen.flac import Picture
+
+                        picture = Picture()
+
+                        picture.data = coverData
+
+                        picture.type = 3
+                        picture.mime = "image/jpeg"
+
+                        resolution = next((x for x in [1200, 600, 300, 270] if photo.get(x)), 1200)
+                        picture.width = resolution
+                        picture.height = resolution
+
+                        picture.depth = 24
+
+                        encodedPicture = base64.b64encode(picture.write()).decode("ascii")
+                        audio["metadata_block_picture"] = [encodedPicture]
+
+                    audio.save()
+
+        return f"{filename}.{extension}"

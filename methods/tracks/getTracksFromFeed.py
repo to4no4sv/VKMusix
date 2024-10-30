@@ -17,21 +17,23 @@
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
 class GetTracksFromFeed:
-    from typing import List
+    from typing import Union, List
 
-    from vkmusix.aio import asyncFunction
+    from vkmusix.aio import async_
     from vkmusix.types import Track
 
-    @asyncFunction
-    async def getTracksFromFeed(self) -> List[Track]:
+    @async_
+    async def getTracksFromFeed(self) -> Union[List[Track], None]:
         """
-        Получает все треки из новостной ленты.
+        Получает треки из новостной ленты.
 
-        Пример использования:\n
-        result = client.getTracksFromFeed()\n
-        print(result)
+        `Пример использования`:
 
-        :return: список аудиотреков в виде объектов модели `Track` с атрибутами `ownerId`, `trackId`, `id` и `url`.
+        tracks = client.getTracksFromFeed()
+
+        print(tracks)
+
+        :return: `При успехе`: треки (``list[types.Track]``). `Если треки отсутствуют`: ``None``.
         """
 
         from vkmusix.types import Track
@@ -44,10 +46,17 @@ class GetTracksFromFeed:
         )).get("audios")
 
         for index, track in enumerate(tracks):
-            ownerId, trackId = track.get("audio_id").split("_")[:2]
+            id = track.get("audio_id")
+
+            if id.count("_") == 3:
+                id = id[:id.rfind("_")]
+
+            ownerId, trackId = id.split("_")[:2]
             tracks[index] = {
                 "owner_id": int(ownerId),
                 "track_id": int(trackId),
             }
 
         return self._finalizeResponse(tracks, Track)
+
+    get_tracks_from_feed = getTracksFromFeed

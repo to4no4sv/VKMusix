@@ -34,17 +34,17 @@ from .restore import Restore
 class Tracks(
     Get,
     GetLyrics,
-    Download,
     GetRecommendations,
+    Add,
+    Remove,
+    Upload,
+    Edit,
+    Restore,
+    Download,
+
     GetTracksFromFeed,
     GetNew,
     GetPopular,
     GetEditorsPick,
-
-    Upload,
-    Add,
-    Remove,
-    Edit,
-    Restore,
 ):
     pass

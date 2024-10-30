@@ -17,20 +17,27 @@
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
 class GetTrackCount:
-    from vkmusix.aio import asyncFunction
+    from vkmusix.aio import async_
 
-    @asyncFunction
-    async def getTrackCount(self, ownerId: int) -> int:
+    @async_
+    async def getTrackCount(self, ownerId: int = None) -> int:
         """
-        Получает количество аудиотреков, принадлежащих этому пользователю или группе.
+        Подписывается на обновления музыки пользователя или группы.
 
-        Пример использования:\n
-        result = client.getTrackCount(ownerId=-215973356)\n
+        `Пример использования`:
+
+        result = client.followOwner(
+            ownerId=-28905875,
+        )
+
         print(result)
 
-        :param ownerId: идентификатор пользователя или группы. (int)
-        :return: количество аудиотреков, принадлежащих пользователю или группе, в виде целого числа.
+        :param ownerId: идентификатор owner'а (пользователь или группа). По умолчанию залогиненный пользователь. (``int``, `optional`)
+        :return: `При успехе`: количество треков (``int``). `Если owner (пользователь или группа) не найден или треки отсутствуют`: ``0``.
         """
+
+        if not ownerId:
+            ownerId = await self._getMyId()
 
         trackCount = await self._req(
             "getCount",
@@ -40,3 +47,5 @@ class GetTrackCount:
         )
 
         return trackCount
+
+    get_track_count = getTrackCount

@@ -17,25 +17,30 @@
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
 class Remove:
-    from typing import Union, List, Tuple
+    from typing import Union, List
 
-    from vkmusix.aio import asyncFunction
+    from vkmusix.aio import async_
 
-    @asyncFunction
-    async def remove(self, ownerIds: Union[int, List[int]], trackIds: Union[int, List[int]], playlistId: int = None, groupId: int = None, reValidateIds: bool = True) -> Union[Tuple[bool], bool]:
+    @async_
+    async def remove(self, ownerIds: Union[List[int], int], trackIds: Union[List[int], int], playlistId: int = None, groupId: int = None, validateIds: bool = True) -> List[bool]:
         """
-        Удаляет аудиотрек(и) из музыки или плейлиста пользователя или группы.
+        Удаляет треки из музыки или плейлиста пользователя или группы.
 
-        Пример использования:\n
-        result = client.remove(ownerIds=474499244, trackIds=456638035, playlistId="yourPlaylistId", groupId="yourGroupId", reValidateIds=False)\n
+        `Пример использования`:
+
+        result = client.remove(
+            ownerIds=-2001471901,
+            trackIds=123471901,
+        )
+
         print(result)
 
-        :param ownerIds: идентификатор(ы) владельца аудиотрека(ов) (пользователь или группа). (int или list)
-        :param trackIds: идентификатор(ы) аудиотрека(ов), который(е) необходимо удалить. (int или list)
-        :param playlistId: идентификатор плейлиста, из которого необходимо удалить аудиотрек(и). (int, необязательно, метод временно не работает для плейлистов, привязанных к чату)
-        :param groupId: идентификатор группы, из музыки или плейлиста которой необходимо удалить аудиотрек(и). (int, необязательно)
-        :param reValidateIds: флаг, указывающий, необходимо ли перепроверить идентификатор(ы) аудитрека(ов) по находящимся в плейлисте. (bool, по умолчанию `True`)
-        :return: кортеж, состоящий из `True`, если аудиотрек(и) успешно удалён(ы), `False` в противном случае.
+        :param ownerIds: идентификатор владельца треков. (``Union[list[int], int]``)
+        :param trackIds: идентификаторы треков. (``Union[list[int], int]``)
+        :param playlistId: идентификатор плейлиста, из которого необходимо удалить треки. Метод не работает для плейлистов, привязанных к чату (``int``, `optional`)
+        :param groupId: идентификатор группы, из музыки или плейлиста которой необходимо удалить треки. (``int``, `optional`)
+        :param validateIds: флаг, указывающий, необходимо ли перепроверить треки на наличие в музыке или плейлисте. По умолчанию ``True``. Установите на ``False``, если вы получили треки через ``client.getTracks()`` (при удалении из музыки) или ``client.getPlaylistTracks()`` (при удалении из плейлиста). (``bool``, `optional`)
+        :return: Статусы удаления треков (``list[bool]``). `При успехе`: ``True``. `Если трек не удалось удалить`: ``False``.
         """
 
         if type(ownerIds) != type(trackIds):
@@ -44,24 +49,22 @@ class Remove:
         elif isinstance(ownerIds, list) and isinstance(trackIds, list) and len(ownerIds) != len(trackIds):
             self._raiseError("ownerIdsAndTrackIdsLenDifferent")
 
-        if not (isinstance(ownerIds, list) and isinstance(trackIds, list)):
+        if not all((isinstance(ownerIds, list), isinstance(trackIds, list))):
             ownerIds = [ownerIds]
             trackIds = [trackIds]
 
         if not groupId:
-            from vkmusix.utils import getSelfId
+            groupId = await self._getMyId()
 
-            groupId = await getSelfId(self)
-
-        if reValidateIds:
+        if validateIds and playlistId: # and playlistId временно
             if playlistId:
                 existTracks = await self.getPlaylistTracks(playlistId, groupId)
 
             else:
-                existTracks = await self.getTracks(groupId)
+                existTracks = NotImplemented
 
             if not existTracks and playlistId:
-                return False
+                return [False] * len(ownerIds)
 
             for index, (ownerId, trackId) in enumerate(zip(ownerIds, trackIds)):
                 if not playlistId:
@@ -128,4 +131,4 @@ class Remove:
 
         results = await gather(*tasks)
 
-        return results[0] if len(results) == 1 else tuple(results)
+        return list(results)

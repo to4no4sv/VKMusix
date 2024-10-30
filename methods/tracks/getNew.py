@@ -17,21 +17,23 @@
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
 class GetNew:
-    from typing import List
+    from typing import Union, List
 
-    from vkmusix.aio import asyncFunction
+    from vkmusix.aio import async_
     from vkmusix.types import Track
 
-    @asyncFunction
-    async def getNew(self) -> List[Track]:
+    @async_
+    async def getNew(self) -> Union[List[Track], None]:
         """
-        Получает аудиотреки, вышедшие недавно.
+        Получает треки, вышедшие недавно.
 
-        Пример использования:\n
-        result = client.getNew()\n
-        print(result)
+        `Пример использования`:
 
-        :return: список аудиотреков в виде объектов модели `Track`.
+        tracks = client.getNew()
+
+        print(tracks)
+
+        :return: `При успехе`: треки (``list[types.Track]``). `Если треки отсутствуют`: ``None``.
         """
 
         from vkmusix.config import playlistsOwnerId
@@ -39,3 +41,5 @@ class GetNew:
         tracks = await self.getPlaylistTracks(2, playlistsOwnerId)
 
         return tracks
+
+    get_new = getNew

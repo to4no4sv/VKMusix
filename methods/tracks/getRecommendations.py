@@ -19,27 +19,37 @@
 class GetRecommendations:
     from typing import Union, List
 
-    from vkmusix.aio import asyncFunction
+    from vkmusix.aio import async_
     from vkmusix.types import Track
 
-    @asyncFunction
-    async def getRecommendations(self, limit: int = None, offset: int = None, ownerId: int = None, trackId: int = None) -> Union[List[Track], Track, None]:
+    @async_
+    async def getRecommendations(self, limit: int = None, offset: int = None, ownerId: int = None, trackId: int = None) -> Union[List[Track], None]:
         """
-        Получает рекомендации аудиотреков для пользователя или похожие на аудиотрек.
+        Получает пользовательские рекомендации, или рекомендации по треку, если заполнены параметры ``ownerId`` и ``trackId``.
 
-        Пример использования для рекомендаций пользователя:\n
-        result = client.getRecommendations(limit=20)\n
-        print(result)
+        `Пример использования для пользовательских рекомендаций`:
 
-        Пример использования для рекомендаций по аудиотреку:\n
-        result = client.getRecommendations(limit=5, ownerId=474499156, trackId=456637846)\n
-        print(result)
+        tracks = client.getRecommendations(
+            limit=10,
+        )
 
-        :param limit: максимальное количество аудиотреков, которое необходимо вернуть. (int, необязательно, минимально для пользовательских рекомендаций 10)
-        :param offset: количество результатов, которые необходимо пропустить. (int, необязательно)
-        :param ownerId: идентификатор владельца аудиотрека (пользователь или группа).
-        :param trackId: идентификатор аудиотрека, похожие на который необходимо получить.
-        :return: список аудиотреков в виде объектов модели `Track`, аудиотрек в виде объекта модели `Track` (если он единственный), или `None` (если рекомендации или похожие треки отсутствуют).
+        print(tracks)
+
+        `Пример использования для рекомендаций по треку`:
+
+        tracks = client.getRecommendations(
+            limit=10,
+            ownerId=-2001471901,
+            trackId=123471901,
+        )
+
+        print(tracks)
+
+        :param limit: лимит треков. Для пользовательских рекомендаций минимально 10. (``int``, `optional`)
+        :param offset: сколько треков пропустить. (``int``, `optional`)
+        :param ownerId: идентификатор владельца трека. (``int``, `optional`)
+        :param trackId: идентификатор трека. (``int``, `optional`)
+        :return: `При успехе`: рекомендации (``list[types.Track]``). `Если рекомендации отсутствуют или трек не найден`: ``None``.
         """
 
         from vkmusix.types import Track
@@ -62,3 +72,5 @@ class GetRecommendations:
         )
 
         return self._finalizeResponse(tracks.get("items"), Track)
+
+    get_recommendations = getRecommendations

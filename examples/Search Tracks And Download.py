@@ -32,30 +32,42 @@
     Скорость загрузки варьируется от примерно 13,06 MB/сек до 15,5 MB/сек.
     Скорость обработки треков варьируется от 2,48 треков/сек до 2,99 треков/сек."""
 
-async def searchTracksAndDownload(query: str, limit: int, directory: str = None) -> None:
-    import os
-    import asyncio
+import os
+import asyncio
 
-    from vkmusix import Client
-    from vkmusix.types import Track
-    from vkmusix.enums import Language
+from vkmusix import Client
+from vkmusix.types import Track
+from vkmusix.enums import Language
 
-    if not directory:
-        directory = os.path.join(os.getcwd(), "tracks")
+query = "Маленький ярче"
+limit = 10
+directory = os.path.join(os.getcwd(), "tracks")
 
+
+async def main() -> None:
     async with Client(
-        language=Language.Russian,
+            language=Language.Russian,
     ) as client:
-        tracks = await client.searchTracks(query=query, limit=limit)
+        tracks = await client.searchTracks(
+            query=query,
+            limit=limit,
+        )
 
-        semaphore = asyncio.Semaphore(8)
+        if not tracks:
+            return
+
+        semaphore = asyncio.Semaphore(10)
+
         async def downloadWithSemaphore(track: Track) -> None:
             async with semaphore:
-                return await track.download(directory=directory)
+                return await track.download(
+                    directory=directory,
+                    metadata=True,
+                )
 
-        trackTasks = [downloadWithSemaphore(track) for track in (tracks if isinstance(tracks, list) else [tracks])]
-        await asyncio.gather(*trackTasks)
+        tasks = [downloadWithSemaphore(track) for track in tracks]
+        await asyncio.gather(*tasks)
+
 
 if __name__ == "__main__":
-    import asyncio
-    asyncio.run(searchTracksAndDownload("Heronwater", 5))
+    asyncio.run(main())

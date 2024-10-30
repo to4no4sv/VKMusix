@@ -16,11 +16,13 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
-from .getAlbum import GetAlbum
-from .getAlbumTracks import GetAlbumTracks
+from .getMe import GetMe
+from .api import Api
+from ._getTracks import _GetTracks
 
-class Albums(
-    GetAlbum,
-    GetAlbumTracks,
+class Other(
+    GetMe,
+    Api,
+    _GetTracks,
 ):
     pass

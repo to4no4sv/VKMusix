@@ -17,27 +17,37 @@
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
 class Upload:
-    from vkmusix.aio import asyncFunction
+    from typing import Union
+
+    from vkmusix.aio import async_
     from vkmusix.types import Track
 
-    @asyncFunction
-    async def upload(self, filename: str, title: str = None, artist: str = None, lyrics: str = None, genreId: int = None, removeFromSearchResults: bool = None, playlistId: int = None, groupId: int = None) -> Track:
+    @async_
+    async def upload(self, filename: str, title: str = None, artist: str = None, lyrics: str = None, genreId: int = None, removeFromSearchResults: bool = None, playlistId: int = None, groupId: int = None) -> Union[Track, None]:
         """
-        Загружает новый аудиотрек во ВКонтакте.
+        Загружает новый трек во ВКонтакте.
 
-        Пример загрузки файла с названием «prombl — zapreti.mp3»:\n
-        result = client.upload(filename="prombl — zapreti", title="zapreti", artist="prombl", lyrics="yourLyrics", removeFromSearchResults=True, playlistId="yourPlaylistId", groupId="yourGroupId")\n
-        print(result)
+        `Пример использования`:
 
-        :param filename: имя MP3-файла, содержащего аудиотрек, который необходимо загрузить. (str)
-        :param title: название аудиотрека. (str, необязательно)
-        :param artist: артист(ы) аудиотрека. (str, необязательно)
-        :param lyrics: текст аудиотрека. (str, необязательно)
-        :param genreId: жанр аудиотрека (в виде идентификатора). (int, необязательно)
-        :param removeFromSearchResults: флаг, указывающий, будет ли аудиотрек скрыт из поисковой выдачи. (bool, необязательно)
-        :param playlistId: идентификатор плейлиста, в который необходимо загрузить аудиотрек. (int, необязательно)
-        :param groupId: идентификатор группы, в музыку которой необходимо загрузить аудиотрек. (int, необязательно)
-        :return: загруженный аудиотрек в виде объекта модели `Track`.
+        track = client.upload(
+            filename="Маленький ярче — LARILARI",
+            title="LARILARI",
+            artist="Маленький ярче",
+            genreId=21,
+            removeFromSearchResults=True,
+        )
+
+        print(track)
+
+        :param filename: путь к .MP3 (обязательно) файлу. (``str``)
+        :param title: название трека. По умолчанию берётся из метаданных файла. (``str``, `optional`)
+        :param artist: артисты трека. По умолчанию берётся из метаданных файла. (``str``, `optional`)
+        :param lyrics: текст трека. (``str``, `optional`)
+        :param genreId: идентификатор жанра трека. (``int``, `optional`)
+        :param removeFromSearchResults: флаг, указывающий, необходимо ли исключить трек из поиска. По умолчанию ``False``. (``bool``, `optional`)
+        :param playlistId: идентификатор плейлиста, в который необходимо добавить трек после загрузки. (``int``, `optional`)
+        :param groupId: идентификатор группы, в плейлист или музыку которой необходимо добавить трек после загрузки. (``int``, `optional`)
+        :return: `При успехе`: информация о загруженном треке (``types.Track``). `Если трек не удалось загрузить`: ``None``.
         """
 
         import os.path

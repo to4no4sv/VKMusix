@@ -17,21 +17,26 @@
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
 class _EditPlaylistPhoto:
-    async def _editPlaylistPhoto(self, playlistId: int, photo: str = None, groupId: int = None) -> bool:
-        if photo is None:
+    from typing import Union
+
+    async def _editPlaylistPhoto(self, playlistId: int, photo: Union[str, None] = str(), groupId: int = None) -> bool:
+        if photo == str():
             return False
 
         if not groupId:
-            from vkmusix.utils import getSelfId
-
-            groupId = await getSelfId(self)
+            groupId = await self._getMyId()
 
         params = {
             "playlist_id": playlistId,
             "owner_id": groupId,
         }
 
-        if photo:
+        if photo is None:
+            method = "deletePlaylistCoverPhoto"
+
+        else:
+            raise NotImplementedError
+
             method = "setPlaylistCoverPhoto"
             params = {
                 **params,
@@ -39,9 +44,6 @@ class _EditPlaylistPhoto:
                     "photo": photo,
                 },
             }
-
-        else:
-            method = "deletePlaylistCoverPhoto"
 
         response = await self._req(method, params)
 

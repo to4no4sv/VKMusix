@@ -17,20 +17,25 @@
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
 class Restore:
-    from vkmusix.aio import asyncFunction
+    from vkmusix.aio import async_
 
-    @asyncFunction
+    @async_
     async def restore(self, ownerId: int, trackId: int) -> bool:
         """
-        Восстанавливает удалённый аудиотрек.
+        Восстанавливает удалённый трек.
 
-        Пример использования:\n
-        result = client.restore(ownerId="yourOwnerId", trackId="yourTrackId")\n
+        `Пример использования`:
+
+        result = client.restore(
+            ownerId=-2001471901,
+            trackId=123471901,
+        )
+
         print(result)
 
-        :param ownerId: идентификатор владельца аудиотрека (пользователь или группа). (int)
-        :param trackId: идентификатор аудиотрека, который необходимо восстановить. (int)
-        :return: `True`, если аудиотрек успешно восстановлен, `False` в противном случае.
+        :param ownerId: идентификатор владельца трека. (``int``)
+        :param trackId: идентификатор трека. (``int``)
+        :return: `При успехе`: ``True``. `Если трек не удалось восстановить`: ``False``.
         """
 
         response = await self._req(

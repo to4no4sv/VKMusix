@@ -23,25 +23,11 @@ from typing import Union
 
 from datetime import datetime
 
-from vkmusix.config import utcTz, moscowTz
+def unixToDatetime(seconds: Union[int, None]) -> Union[datetime, None]:
+    if not seconds:
+        return
 
-async def getSelfId(self: "Client") -> int:
-    if not self._me:
-        self._me = await self.getMe()
-
-    return self._me.get("id")
-
-
-def unixToDatetime(seconds: int) -> datetime:
-    UTC = datetime.utcfromtimestamp(seconds)
-    return UTC.replace(tzinfo=utcTz).astimezone(moscowTz)
-
-
-def addHTTPsToUrl(url: str) -> str:
-    if not ("https://" in url or "http://" in url):
-        url = "https://" + url
-
-    return url
+    return datetime.utcfromtimestamp(seconds)
 
 
 def fileExistsCaseInsensitive(filename: str) -> Union[str, None]:

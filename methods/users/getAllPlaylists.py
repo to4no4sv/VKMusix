@@ -19,23 +19,26 @@
 class GetAllPlaylists:
     from typing import Union, List
 
-    from vkmusix.aio import asyncFunction
+    from vkmusix.aio import async_
     from vkmusix.types import Album, Playlist
     from vkmusix.enums import PlaylistType
 
-    @asyncFunction
-    async def getAllPlaylists(self, ownerId: int = None, playlistTypes: Union[PlaylistType, List[PlaylistType]] = None) -> Union[List[Union[Playlist, Album]], Playlist, Album, None]:
+    @async_
+    async def getAllPlaylists(self, ownerId: int = None, playlistTypes: Union[List[PlaylistType], PlaylistType] = None) -> Union[List[Union[Playlist, Album]], None]:
         """
-        Получает все плейлисты пользователя или группы.
+        Получает все плейлисты и (или) альбомы owner'а (пользователь или группа).
 
-        Пример использования:\n
-        from vkmusix.enums import PlaylistType
-        result = client.getAllPlaylists(ownerId=-215973356, playlistTypes=PlaylistType.Own)\n
-        print(result)
+        `Пример использования`:
 
-        :param ownerId: идентификатор пользователя или группы, плейлисты которого(ой) необходимо получить. (int, по умолчанию текущий пользователь)
-        :param playlistTypes: типы плейлистов, которые необходимо получить. (PlaylistType или List[PlaylistType], необязательно)
-        :return: список плейлистов в виде объектов модели `Playlist` или `Album`, плейлист в виде объекта модели `Playlist` или `Album` (если он единственственный), или `None` (если плейлисты отсутствуют).
+        playlists = client.getAllPlaylists(
+            ownerId=-1,
+        )
+
+        print(playlists)
+
+        :param ownerId: идентификатор owner'а (пользователь или группа). По умолчанию залогиненный пользователь. (``int``, `optional`)
+        :param playlistTypes: нужные типы плейлистов. (``Union[list[enums.PlaylistType], enums.PlaylistType]``, `optional`)
+        :return: `При успехе`: плейлисты и (или) альбомы (`list[Union[types.Playlist, types.Album]]). `Если owner (пользователь или группа) не найден или плейлисты и (или) альбомы отсутствуют`: ``None``.
         """
 
         from asyncio import gather
@@ -44,9 +47,7 @@ class GetAllPlaylists:
         from vkmusix.enums import PlaylistType
 
         if not ownerId:
-            from vkmusix.utils import getSelfId
-
-            ownerId = await getSelfId(self)
+            ownerId = await self._getMyId()
 
         if not isinstance(playlistTypes, list):
             playlistTypes = [playlistTypes]
@@ -92,4 +93,6 @@ class GetAllPlaylists:
 
         playlists = [playlist for playlist in playlists if (isinstance(playlist, Playlist) and (PlaylistType.Own if playlist.own else PlaylistType.Foreign) in playlistTypes) or (isinstance(playlist, Album) and PlaylistType.Album in playlistTypes)]
 
-        return (playlists if len(playlists) > 1 else playlists[0]) if playlists else None
+        return playlists if playlists else None
+
+    get_all_playlists = getAllPlaylists

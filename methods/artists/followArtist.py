@@ -17,19 +17,23 @@
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
 class FollowArtist:
-    from vkmusix.aio import asyncFunction
+    from vkmusix.aio import async_
 
-    @asyncFunction
+    @async_
     async def followArtist(self, artistId: int = None) -> bool:
         """
-        Подписывается на обновления музыки артиста по его идентификатору.
+        Подписывается на обновления музыки артиста.
 
-        Пример использования:\n
-        result = client.followArtist(artistId=5696274288194638935)\n
+        `Пример использования`:
+
+        result = client.followArtist(
+            artistId=5696274288194638935,
+        )
+
         print(result)
 
-        :param artistId: идентификатор артиста, на обновления которого необходимо подписаться. (int)
-        :return: `True`, если Вы успешно подписались на обновления музыки артиста, `False` в противном случае.
+        :param artistId: идентификатор артиста. (``int``)
+        :return: `При успехе`: ``True``. `Если артист не найден`: ``False``.
         """
 
         response = await self._req(
@@ -40,3 +44,5 @@ class FollowArtist:
         )
 
         return bool(response)
+
+    follow_artist = followArtist

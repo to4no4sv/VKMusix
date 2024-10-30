@@ -16,23 +16,27 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
-from ._search import _Search
-from .search import Search
-from .searchArtists import SearchArtists
-from .searchAlbums import SearchAlbums
-from .searchTracks import SearchTracks
-from .searchPlaylists import SearchPlaylists
+class GetMe:
+    from vkmusix.aio import async_
 
-from .getSearchTrends import GetSearchTrends
+    @async_
+    async def getMe(self) -> dict:
+        """
+        Получает информацию о залогиненном пользователе.
 
-class Searching(
-    _Search,
-    Search,
-    SearchArtists,
-    SearchAlbums,
-    SearchTracks,
-    SearchPlaylists,
+        `Пример использования`:
 
-    GetSearchTrends,
-):
-    pass
+        me = client.getMe()
+
+        print(me)
+
+        :return: Информация о залогиненном пользователе (``dict``).
+        """
+
+        me = await self._req("users.get")
+        if not self._me:
+            self._me = me
+
+        return me
+
+    get_me = getMe

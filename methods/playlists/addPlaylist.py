@@ -19,44 +19,52 @@
 class AddPlaylist:
     from typing import Union
 
-    from vkmusix.aio import asyncFunction
-    from vkmusix.types import Playlist
+    from vkmusix.aio import async_
+    from vkmusix.types import Album, Playlist
 
-    @asyncFunction
-    async def addPlaylist(self, playlistId: int, ownerId: int = None, groupId: int = None) -> Union[Playlist, None]:
+    @async_
+    async def addPlaylist(self, playlistId: int, ownerId: int = None, groupId: int = None) -> Union[Playlist, Album, None]:
         """
-        Добавляет плейлист в музыку пользователя или группы.
+        Добавляет плейлист или альбом в музыку пользователя или группы.
 
-        Пример использования:\n
-        result = client.addPlaylist(playlistId=1, ownerId=-215973356, groupId="yourGroupId")\n
-        print(result)
+        `Пример использования`:
 
-        :param ownerId: идентификатор владельца плейлиста (пользователь или группа). (int, по умолчанию текущий пользователь)
-        :param playlistId: идентификатор плейлиста, который необходимо добавить. (int)
-        :param groupId: идентификатор группы, в которую необходимо добавить плейлист. (int, необязательно)
-        :return: добавленный плейлист в виде объекта модели `Playlist` с атрибутами `ownerId`, `playlistId`, `id`, `url` и `own`, если плейлист успешно добавлен, `None` в противном случае.
+        playlist = client.addPlaylist(
+            ownerId=-2000201020,
+            playlistId=19201020,
+        )
+
+        print(playlist)
+
+        :param playlistId: идентификатор плейлиста или альбома. (``int``)
+        :param ownerId: идентификатор владельца плейлиста или альбома (пользователь или группа). (``int``, `optional`)
+        :param groupId: идентификатор группы, в которую необходимо добавить плейлист или альбом. (``int``, `optional`)
+        :return: `При успехе`: информация о добавленном плейлисте или альбоме (``Union[types.Playlist, types.Album]``). `Если плейлист или альбом не найден`: ``None``.
         """
 
+        from vkmusix.errors import NotFound
         from vkmusix.types import Playlist
 
         if not ownerId:
-            from vkmusix.utils import getSelfId
+            ownerId = await self._getMyId()
 
-            ownerId = await getSelfId(self)
+        try:
+            playlist = await self._req(
+                "followPlaylist",
+                {
+                    "owner_id": ownerId,
+                    "playlist_id": playlistId,
+                    **(
+                        {
+                            "group_id": groupId
+                        }
+                        if groupId else dict()
+                    )
+                }
+            )
 
-        playlist = await self._req(
-            "followPlaylist",
-            {
-                "owner_id": ownerId,
-                "playlist_id": playlistId,
-                **(
-                    {
-                        "group_id": groupId
-                    }
-                    if groupId else dict()
-                )
-            }
-        )
+        except NotFound:
+            return
 
         ownerId = playlist.get("owner_id")
         playlistId = playlist.get("playlist_id")
@@ -72,3 +80,5 @@ class AddPlaylist:
             True,
             self,
         )
+
+    add_playlist = addPlaylist

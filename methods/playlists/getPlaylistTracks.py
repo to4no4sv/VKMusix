@@ -19,26 +19,77 @@
 class GetPlaylistTracks:
     from typing import Union, List
 
-    from vkmusix.aio import asyncFunction
+    from vkmusix.aio import async_
     from vkmusix.types import Track
 
-    @asyncFunction
-    async def getPlaylistTracks(self, playlistId: int, ownerId: int = None) -> Union[List[Track], Track, None]:
+    @async_
+    async def getPlaylistTracks(self, playlistId: int, ownerId: int = None) -> Union[List[Track], None]:
+        """
+        Получает треки плейлиста или альбома.
+
+        `Пример использования`:
+
+        tracks = client.getPlaylistTracks(
+            ownerId=-2000201020,
+            albumId=19201020,
+        )
+
+        print(tracks)
+
+        :param playlistId: идентификатор плейлиста или альбома. (``int``)
+        :param ownerId: идентификатор владельца плейлиста или альбома (пользователь или группа). (``int``, `optional`)
+        :return: `При успехе`: треки плейлиста или альбома (``list[types.Track]``). `Если плейлист или альбом не найден или треки отсутствуют`: ``None``.
+        """
+
         from vkmusix.config import VK, headers
-        from vkmusix.utils import getSelfId
+        from vkmusix.types import Track
 
         if not ownerId:
-            ownerId = await getSelfId(self)
+            ownerId = await self._getMyId()
 
-        tracks = await self._client.req(f"{VK}music/playlist/{ownerId}_{playlistId}", cookies=self._cookies, headers=headers, responseType="response")
+        tracks = await self._client.req(
+            f"{VK}music/playlist/{ownerId}_{playlistId}",
+            headers=headers,
+            responseType="response",
+        )
+
         statusCode = tracks.status_code
 
         if statusCode == 404:
             return
 
-        elif statusCode == 302:
-            tracks = await self._client.req(f'{VK}{tracks.headers.get("Location")}', headers=headers, responseType="response")
+        while statusCode == 302:
+            tracks = await self._client.req(
+                f'{VK}{tracks.headers.get("Location")}',
+                headers=headers,
+                responseType="response",
+            )
+            statusCode = tracks.status_code
 
         tracks = await self._getTracks(tracks.text)
 
-        return tracks
+        if not tracks:
+            tracks = (await self._req(
+                "getAudioIdsBySource",
+                {
+                    "playlist_id": f"{ownerId}_{playlistId}",
+                },
+                version=5.195,
+            )).get("audios")
+
+            if tracks:
+                for index, id in enumerate(tracks):
+                    if id.count("_") == 3:
+                        id = id[:id.rfind("_")]
+
+                    ownerId, trackId = id.split("_")[:2]
+                    tracks[index] = {
+                        "owner_id": int(ownerId),
+                        "track_id": int(trackId),
+                    }
+
+                return self._finalizeResponse(tracks, Track)
+
+        return tracks if tracks else None
+
+    get_playlist_tracks = getPlaylistTracks

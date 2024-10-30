@@ -20,34 +20,64 @@ from .base import Base
 
 class Track(Base):
     """
-    Класс, представляющий аудиотрек.
+    Класс, представляющий трек.
 
     Атрибуты:
-        title (str): название аудиотрека.\n
-        subtitle (str, optional): подзаголовок аудиотрека, если он присутствует.\n
-        artists (list[Artist], optional): список основных артистов аудиотрека, представленных объектами класса `Artist`.\n
-        artist (str): основной(ые) артист(ы) аудиотрека.\n
-        featuredArtists (list[Artist], optional): список приглашённых артистов аудиотрека, представленных объектами класса `Artist`.\n
-        genre (Genre, optional): жанр аудиотрека, представленный объектом класса `Genre`.\n
-        explicit (bool, optional): флаг, указывающий, есть ли в треке ненормативная лексика.\n
-        duration (int): продолжительность аудиотрека в секундах.\n
-        fileUrl (str, optional): ссылка на m3u8-файл.\n
-        lyrics (str, optional): текст аудиотрека.\n
-        hasLyrics (bool, optional): флаг, указывающий, имеет ли аудиотрек текст.\n
-        uploadedAt (datetime, optional): дата и время загрузки аудиотрека (UTC +03:00).\n
-        album (Album, optional): альбом, к которому принадлежит аудиотрек, представленный объектом класса `Album`.\n
-        releaseTrack (Track, optional): аудиотрек, загруженный официально, похожий на данный.\n
-        ownerId (str): идентификатор владельца аудиотрека.\n
-        trackId (str): идентификатор аудиотрека.\n
-        id (str): комбинированный идентификатор в формате `ownerId_trackId`.\n
-        url (str): URL страницы аудиотрека.
+        title (str): название трека.
+
+        subtitle (str, optional): подзаголовок трека, во ВКонтакте отображается серым цветом справа от названия.
+
+        fullTitle (str): полное название трека в формате {title} ({subtitle}).
+
+        artist (str): все артисты трека в виде строки.
+
+        artists (list[types.Artist], optional): основные артисты трека. Доступно только для официально загруженных треков.
+
+        featuredArtists (list[types.Artist], optional): приглашённые артисты трека. Доступно только для оффициально загруженных треков.
+
+        duration (int): длительность трека в секундах.
+
+        genre (types.Genre, optional): жанр трека.
+
+        lyrics (str, optional): текст трека.
+
+        hasLyrics (bool, optional): флаг, указывающий, имеет ли трек текст. Отсутствует, если lyrics не None.
+
+        uploadedAt (datetime): дата и время загрузки трека (не релиза).
+
+        fileUrl (str, optional) — ссылка на файл трека в формате .M3U8. Отсутствует, если трек доступен только с подпиской, а залогиненный пользователь её не имеет.
+
+        album (types.Album, optional): альбом, на котором присутствует этот трек. В некоторых случаях может быть доступно и не для оффициально загруженных треков.
+
+        explicit (bool, optional): флаг, указывающий, есть ли в треке ненормативная лексика. Доступно только для оффициально загруженных треков.
+
+        licensed (bool, optional): флаг, указывающий, ???
+
+        focus (bool, optional): флаг, указывающий, является ли трек фокус-треком на альбоме.
+
+        shortsAllowed (bool, optional): флаг, указывающий, доступен ли этот трек для использования в ВК Клипах.
+
+        storiesAllowed (bool, optional): флаг, указывающий, доступен ли этот трек для использования в историях.
+
+        releaseTrack (types.Track, optional): официально загруженный трек, который ВКонтакте считает максимально похожим на данный. Может быть этим же треком.
+
+        ownerId (int): идентификатор владельца трека (пользователь или группа).
+
+        trackId (int): идентификатор трека.
+
+        id (str): полный идентификатор трека в формате {ownerId}_{trackId}.
+
+        url (str): ссылка на трек в формате https://vk.com/audio{id}
+
+        raw (dict): необработанные данные, полученные от ВКонтакте.
     """
 
     from typing import Union, List
 
-    from vkmusix.aio import asyncFunction
+    from vkmusix.aio import async_
+    from vkmusix.enums import Extension
 
-    def __init__(self, track: dict, releaseTrack: bool = False, client: "Client" = None) -> None:
+    def __init__(self, track: dict, releaseTrack: bool = None, client: "Client" = None) -> None:
         import html
 
         from vkmusix.config import VK
@@ -70,31 +100,37 @@ class Track(Base):
         artist = track.get("artist")
         self.artist = html.unescape(artist) if artist else None
 
-        mainArtists = track.get("main_artists")
-        self.artists = [Artist(mainArtist, client=self._client) for mainArtist in mainArtists] if mainArtists else None
+        self.artists = self._client._finalizeResponse(
+            track.get("main_artists"),
+            Artist,
+        )
 
-        featuredArtists = track.get("featured_artists")
-        self.featuredArtists = [Artist(featuredArtist, client=self._client) for featuredArtist in featuredArtists] if featuredArtists else None
+        self.featuredArtists = self._client._finalizeResponse(
+            track.get("featured_artists"),
+            Artist,
+        )
+
+        self.duration = track.get("duration")
 
         genreId = track.get("genre_id")
-        self.genre = Genre(genreId=genreId, client=self._client) if genreId else None
+        self.genre = Genre(
+            genreId=genreId,
+            client=self._client,
+        ) if genreId else None
+
+        self.lyrics = track.get("lyrics")
+        self.hasLyrics = track.get("has_lyrics") if not self.lyrics else None
+
+        self.uploadedAt = unixToDatetime(track.get("date"))
+
+        self.fileUrl = track.get("url") or None
+
+        self.album = self._client._finalizeResponse(
+            track.get("album"),
+            Album,
+        )
 
         self.explicit = track.get("is_excplicit")
-
-        duration = track.get("duration")
-        self.duration = duration if duration else None
-
-        self.fileUrl = track.get("url")
-
-        lyrics = track.get("lyrics")
-        self.lyrics = lyrics if lyrics else None
-        self.hasLyrics = track.get("has_lyrics") if not lyrics else None
-
-        uploadedAt = track.get("date")
-        self.uploadedAt = unixToDatetime(uploadedAt) if uploadedAt else None
-
-        album = track.get("album")
-        self.album = Album(album, client=self._client) if album else None
 
         self.licensed = track.get("is_licensed")
         self.focus = track.get("is_focus_track")
@@ -119,170 +155,276 @@ class Track(Base):
 
         self.ownerId = track.get("owner_id")
         self.trackId = track.get("id") or track.get("track_id")
-
         self.id = f"{self.ownerId}_{self.trackId}"
-        self.url = VK + f"audio{self.id}"
+        self.url = f"{VK}audio{self.id}"
 
         self.raw = track
 
 
-    @asyncFunction
-    async def get(self, includeLyrics: bool = False) -> "Track":
+    @async_
+    async def get(self, includeLyrics: bool = False) -> Union["Track", None]:
         """
-        Получает информацию об аудиотреке.
+        Получает информацию о треке.
 
-        Пример использования:\n
-        result = track.get(includeLyrics=True)\n
-        print(result)
+        `Пример использования`:
 
-        :param includeLyrics: флаг, указывающий, необходимо ли включать текст трека в ответ. (bool, по умолчанию `False`)
-        :return: информация об аудиотреке в виде объекта модели `Track`.
+        track = track.get(
+            includeLyrics=True,
+        )
+
+        print(track)
+
+        :param includeLyrics: флаг, указывающий, небходимо ли также получить текст. (``bool``, `optional`)
+        :return: `При успехе`: информация о треке (``types.Track``). `Если трек не найден`: ``None``.
         """
 
-        return await self._client.get(self.ownerId, self.trackId, includeLyrics)
+        return await self._client.get(
+            self.ownerId,
+            self.trackId,
+            includeLyrics,
+        )
 
 
-    @asyncFunction
+    @async_
     async def getLyrics(self) -> Union[str, None]:
-        return await self._client.getLyrics(self.ownerId, self.trackId)
-
-
-    @asyncFunction
-    async def download(self, filename: str = None, directory: str = None) -> Union[str, None]:
         """
-        Загружает аудиотрек в формате MP3.
+        Получает текст трека.
 
-        :param filename: название файла с аудиотреком. (str, по умолчанию `{artist} -- {title}`)
-        :param directory: путь к директории, в которую загрузить файл. (str, по умолчанию `os.getcwd()`)
-        :return: полный путь к загруженному файлу, если аудиотрек успешно загружен, иначе `None`.
-        """
+        `Пример использования`:
 
-        return await self._client.download(filename=filename, directory=directory, track=self)
+        lyrics = track.getLyrics()
 
+        print(lyrics)
 
-    @asyncFunction
-    async def getRecommendations(self, limit: int = None, offset: int = None) -> Union[List["Track"], "Track", None]:
-        """
-        Получает похожие на аудиотрек.
-
-        Пример использования:\n
-        result = track.getRecommendations(limit=20)\n
-        print(result)
-
-        :param limit: максимальное количество аудиотреков, которое необходимо вернуть. (int, необязательно)
-        :param offset: количество результатов, которые необходимо пропустить. (int, необязательно)
-        :return: список аудиотреков в виде объектов модели `Track`, аудиотрек в виде объекта модели `Track` (если он единственный), или `None` (если похожие треки отсутствуют).
+        :return: `При успехе`: текст трека (``str``). `Если трек не найден или текст отсутствует`: ``None``.
         """
 
-        return await self._client.getRecommendations(limit, offset, self.ownerId, self.trackId)
+        return await self._client.getLyrics(
+            self.ownerId,
+            self.trackId,
+        )
 
 
-    @asyncFunction
+    @async_
+    async def download(self, filename: str = None, directory: str = None, extension: Extension = None, metadata: bool = False) -> Union[str, None]:
+        """
+        Скачивает трек.
+
+        `Пример использования`:
+
+        from vkmusix.enums import Extension
+
+        path = track.download(
+            extension=Extension.OPUS,
+            metadata=True,
+        )
+
+        print(path)
+
+        :param filename: имя файла с треком. По умолчанию ``{artist} — {fullTitle}``. Поддерживаемые переменные для динамического имени: ``artist``, ``title``, ``subtitle``, ``fullTitle``, ``album``. Пример динамического имени файла: ``{artist} - {title} ({album})``. (``str``, `optional`)
+        :param directory: путь к директории, в которую загрузить трек. (``str``, `optional`)
+        :param extension: расширение файла с треком. По умолчанию ``Extension.MP3``. (``enums.Extension``, `optional`)
+        :param metadata: флаг, указывающий, необходимо ли добавить метаданные (артист, название, альбом, обложка) к файлу с треком. По умолчанию ``False``. Игнорируется, если параметр ``extension`` равен ``Extension.TS``. (``bool``, `optional`)
+        :return: `При успехе`: полный путь к загруженному файлу (``str``). `Если трек не найден или недоступен для загрузки`: ``None``.
+        """
+
+        return await self._client.download(
+            filename=filename,
+            directory=directory,
+            extension=extension,
+            metadata=metadata,
+            track=self,
+        )
+
+
+    @async_
+    async def getRecommendations(self, limit: int = None, offset: int = None) -> Union[List["Track"], None]:
+        """
+        Получает рекомендации по треку.
+
+        `Пример использования`:
+
+        tracks = track.getRecommendations(
+            limit=10,
+        )
+
+        print(tracks)
+
+        :param limit: лимит треков. (``int``, `optional`)
+        :param offset: сколько треков пропустить. (``int``, `optional`)
+        :return: `При успехе`: рекомендации (``list[types.Track]``). `Если рекомендации отсутствуют или трек не найден`: ``None``.
+        """
+
+        return await self._client.getRecommendations(
+            limit,
+            offset,
+            self.ownerId,
+            self.trackId,
+        )
+
+
+    @async_
     async def add(self, playlistId: int = None, groupId: int = None) -> bool:
         """
-        Добавляет аудиотрек в музыку или плейлист пользователя или группы.
+        Добавляет трек в музыку или плейлист пользователя или группы.
 
-        Пример использования:\n
-        result = track.add(playlistId="yourPlaylistId", groupId="yourGroupId")\n
+        `Пример использования`:
+
+        result = track.add()
+
         print(result)
 
-        :param playlistId: идентификатор плейлиста, в который необходимо добавить аудиотрек. (int, необязательно)
-        :param groupId: идентификатор группы, в музыку или плейлист которой необходимо добавить аудиотрек. (int, необязательно)
-        :return: `True`, если аудиотрек успешно добавлен, `False` в противном случае.
+        :param playlistId: идентификатор плейлиста, в который необходимо добавить трек. (``int``, `optional`)
+        :param groupId: идентификатор группы, в музыку или плейлист которой необходимо добавить трек. (``int``, `optional`)
+        :return: `При успехе`: ``True``. `Если трек не удалось добавить`: ``False``.
         """
 
-        return await self._client.add(self.ownerId, self.trackId, playlistId, groupId)
+        return (await self._client.add(
+            self.ownerId,
+            self.trackId,
+            playlistId,
+            groupId,
+        ))[0]
 
 
-    @asyncFunction
-    async def remove(self, playlistId: int = None, groupId: int = None, reValidateIds: bool = True) -> bool:
+    @async_
+    async def remove(self, playlistId: int = None, groupId: int = None, validateIds: bool = True) -> bool:
         """
-        Удаляет аудиотрек из музыки или плейлиста пользователя или группы.
+        Удаляет трек из музыки или плейлиста пользователя или группы.
 
-        Пример использования:\n
-        result = track.remove(playlistId="yourPlaylistId", groupId="yourGroupId", reValidateIds=False)\n
+        `Пример использования`:
+
+        result = track.remove()
+
         print(result)
 
-        :param playlistId: идентификатор плейлиста, из которого необходимо удалить аудиотрек(и). (int, необязательно, метод временно не работает для плейлистов, привязанных к чату)
-        :param groupId: идентификатор группы, из музыки или плейлиста которой необходимо удалить аудиотрек(и). (int, необязательно)
-        :param reValidateIds: флаг, указывающий, необходимо ли перепроверить идентификатор(ы) аудитрека(ов) по находящимся в плейлисте. (bool, по умолчанию `True`)
-        :return: `True`, если аудиотрек успешно удалён, `False` в противном случае.
+        :param playlistId: идентификатор плейлиста, из которого необходимо удалить трек. Метод не работает для плейлистов, привязанных к чату (``int``, `optional`)
+        :param groupId: идентификатор группы, из музыки или плейлиста которой необходимо удалить трек. (``int``, `optional`)
+        :param validateIds: флаг, указывающий, необходимо ли перепроверить трек на наличие в музыке или плейлисте. По умолчанию ``True``. Установите на ``False``, если вы получили трек через ``client.getTracks()`` (при удалении из музыки) или ``client.getPlaylistTracks()`` (при удалении из плейлиста). (``bool``, `optional`)
+        :return: Статусы удаления треков (``list[bool]``). `При успехе`: ``True``. `Если трек не удалось удалить`: ``False``.
         """
 
-        return await self._client.remove(self.ownerId, self.trackId, playlistId, groupId, reValidateIds)
+        return (await self._client.remove(
+            self.ownerId,
+            self.trackId,
+            playlistId,
+            groupId,
+            validateIds,
+        ))[0]
 
 
-    @asyncFunction
-    async def edit(self, title: Union[str, int] = None, artist: Union[str, int] = None, lyrics: Union[str, int] = None, genreId: int = None, removeFromSearchResults: bool = None) -> bool:
+    @async_
+    async def edit(self, title: str = None, artist: str = None, lyrics: str = None, genreId: int = None, removeFromSearchResults: bool = None) -> bool:
         """
-        Изменяет информацию об аудиотреке.
+        Изменяет информацию о треке.
 
-        Пример использования:\n
-        result = track.edit(title="zapreti", artist="prombl", "lyrics"=str(), "genreId"=3, removeFromSearchResults=True)\n
+        `Пример использования`:
+
+        result = track.edit(
+            filename="Маленький ярче — LARILARI",
+            title="LARILARI",
+            artist="Маленький ярче",
+            genreId=21,
+            removeFromSearchResults=True,
+        )
+
         print(result)
 
-        :param title: новое название аудиотрека. (str, необязательно)
-        :param artist: новый(е) артист(ы) аудиотрека. (str, необязательно)
-        :param lyrics: новый текст аудиотрека. (str, необязательно)
-        :param genreId: новый жанр аудиотрека (в виде идентификатора). (int, необязательно)
-        :param removeFromSearchResults: флаг, указывающий, будет ли аудиотрек скрыт из поисковой выдачи. (bool, необязательно)
-        :return: `True`, если информация аудиотрека успешно обновлена, `False` в противном случае.
+        :param title: название трека. По умолчанию берётся из метаданных файла. (``str``, `optional`)
+        :param artist: артисты трека. По умолчанию берётся из метаданных файла. (``str``, `optional`)
+        :param lyrics: текст трека. (``str``, `optional`)
+        :param genreId: идентификатор жанра трека. (``int``, `optional`)
+        :param removeFromSearchResults: флаг, указывающий, необходимо ли исключить трек из поиска. По умолчанию ``False``. (``bool``, `optional`)
+        :return: `При успехе`: ``True``. `Если информацию о треке не удалось изменить`: ``False``.
         """
 
-        return await self._client.edit(self.ownerId, self.trackId, title, artist, lyrics, genreId, removeFromSearchResults)
+        return await self._client.edit(
+            self.ownerId,
+            self.trackId,
+            title,
+            artist,
+            lyrics,
+            genreId,
+            removeFromSearchResults,
+        )
 
 
-    @asyncFunction
+    @async_
     async def restore(self) -> bool:
         """
-        Восстанавливает удалённый аудиотрек.
+        Восстанавливает удалённый трек.
 
-        Пример использования:\n
-        result = track.restore()\n
+        `Пример использования`:
+
+        result = track.restore()
+
         print(result)
 
-        :return: `True`, если аудиотрек успешно восстановлен, `False` в противном случае.
+        :return: `При успехе`: ``True``. `Если трек не удалось восстановить`: ``False``.
         """
 
-        return await self._client.restore(self.ownerId, self.trackId)
+        return await self._client.restore(
+            self.ownerId,
+            self.trackId,
+        )
 
 
-    @asyncFunction
+    @async_
     async def reorder(self, beforeTrackId: int = None, afterTrackId: int = None) -> bool:
         """
-        Изменяет порядок аудиотрека в музыке пользователя. Должен быть заполнен один из параметров на выбор: `beforeTrackId` или `afterTrackId`.
+        Изменяет порядок трека в музыке пользователя. Должен быть заполнен один из параметров на выбор: ``beforeTrackId`` или ``afterTrackId``.
 
-        Пример использования для перемещения на место перед определённым треком:\n
-        result = track.reorder(beforeTrackId="yourBeforeTrackId")\n
+        `Пример использования для перемещения на место перед определённым треком`:
+
+        result = track.reorder(
+            beforeTrackId=123471901,
+        )
+
         print(result)
 
-        Пример использования для перемещения на место после определённого трека:\n
-        result = track.reorder(afterTrackId="yourAfterTrackId")\n
+        `Пример использования для перемещения на место после определённого трека`:
+
+        result = track.reorder(
+            afterTrackId=123471901,
+        )
+
         print(result)
 
-        :param beforeTrackId: идентификатор аудиотрека перед которым необходимо поместить аудиотрек. (int, необязательно)
-        :param afterTrackId: идентификатор аудиотрека после которого необходимо поместить аудиотрек. (int, необязательно)
-        :return: `True`, если порядок трека успешно изменён, `False` в противном случае.
+        :return: ``True``.
         """
 
-        return await self._client.reorder(self.trackId, beforeTrackId, afterTrackId)
+        return await self._client.reorder(
+            self.trackId,
+            beforeTrackId,
+            afterTrackId,
+        )
 
 
-    @asyncFunction
-    async def setBroadcast(self, groupIds: Union[List[str], str] = None) -> bool:
+    @async_
+    async def setBroadcast(self, groupIds: Union[List[int], int] = None) -> bool:
         """
-        Устанавливает аудиотрек в статус пользователя или группы.
+        Транслирует трек в статус owner'а (пользователь или группа).
 
-        Пример использования для установки аудиотрека в статус пользователя:\n
-        result = track.setBroadcast()\n
+        `Пример использования для трансляции трека в статус залогиненного пользователя`:
+
+        result = track.setBroadcast()
+
         print(result)
 
-        Пример использования для установки аудиотрека в статус группы:\n
-        result = track.setBroadcast(groupdIds="yourGroupId")\n
+        `Пример использования для трансляции трека в статус группы`:
+
+        result = track.setBroadcast(
+            groupIds=1,
+        )
+
         print(result)
 
-        :param groupIds: идентификатор(ы) групп(ы), в статус которой(ых) необходимо установить аудиотрек. (int, по умолчанию текущий пользователь)
-        :return: `True`, если аудиотрек успешно установлен в статус, `False` в противном случае.
+        :param groupIds: идентификаторы групп, трансляцию в статус которых необходимо начать. По умолчанию залогиненный пользователь. (``Union[list[int], int]``, `optional`)
+        :return: `При успехе`: ``True``. `В противном случае`: ``False``.
         """
 
-        return await self._client.setBroadcast(self.ownerId, self.trackId, groupIds)
+        return await self._client.setBroadcast(
+            self.ownerId,
+            self.trackId,
+            groupIds,
+        )

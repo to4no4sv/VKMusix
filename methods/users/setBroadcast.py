@@ -19,33 +19,50 @@
 class SetBroadcast:
     from typing import Union, List
 
-    from vkmusix.aio import asyncFunction
+    from vkmusix.aio import async_
 
-    @asyncFunction
-    async def setBroadcast(self, ownerId: int = None, trackId: int = None, groupIds: Union[List[str], str] = None) -> bool:
+    @async_
+    async def setBroadcast(self, ownerId: int = None, trackId: int = None, groupIds: Union[List[int], int] = None) -> bool:
         """
-        Устанавливает (удаляет) аудиотрек в (из) статус(а) пользователя или группы.
+        Транслирует трек в статус owner'а (пользователь или группа). Также останавливает трансляцию в статус.
 
-        Пример использования для установки аудиотрека в статус пользователя:\n
-        result = client.setBroadcast(ownerId=474499156, trackId=456637846)\n
+        `Пример использования для трансляции трека в статус залогиненного пользователя`:
+
+        result = client.setBroadcast(
+            ownerId=-2001471901,
+            trackId=123471901,
+        )
+
         print(result)
 
-        Пример использования для установки аудиотрека в статус группы:\n
-        result = client.setBroadcast(ownerId=474499156, trackId=456637846, groupdIds="yourGroupId")\n
+        `Пример использования для остановки трансляции трека в статус залогиненного пользователя`:
+
+        result = client.setBroadcast()
+
         print(result)
 
-        Пример использования для удаления аудиотрека из статуса пользователя:\n
-        result = client.setBroadcast()\n
+        `Пример использования для трансляции трека в статус группы`:
+
+        result = client.setBroadcast(
+            ownerId=-2001471901,
+            trackId=123471901,
+            groupIds=1,
+        )
+
         print(result)
 
-        Пример использования для удаления аудиотрека из статуса группы:\n
-        result = client.setBroadcast(groupdIds="yourGroupId")\n
+        `Пример использования для остановки трансляции трека в статус группы`:
+
+        result = client.setBroadcast(
+            groupIds=1,
+        )
+
         print(result)
 
-        :param ownerId: идентификатор владельца аудиотрека (пользователь или группа). (int, необязательно)
-        :param trackId: идентификатор аудиотрека, который необходимо установить в статус. (int, необязательно)
-        :param groupIds: идентификатор(ы) групп(ы), в (из) статус(а) которой(ых) необходимо установить (удалить) аудиотрек. (int, по умолчанию текущий пользователь)
-        :return: `True`, если аудиотрек успешно установлен (удалён) в (из) статус(а), `False` в противном случае.
+        :param ownerId: идентификатор владельца трека, который необходимо транслировать в статус (пользователь или группа). Если параметр не заполнен, останавливает трансляцию в статус. (``int``, `optional`)
+        :param trackId: идентификатор трека, который необходимо транслировать в статус. Если параметр не заполнен, останавливает трансляцию в статус. (``int``, `optional`)
+        :param groupIds: идентификаторы групп, трансляцию в статус которых необходимо начать или остановить. По умолчанию залогиненный пользователь. (``Union[list[int], int]``, `optional`)
+        :return: `При успехе`: ``True``. `В противном случае`: ``False``.
         """
 
         response = await self._req(
@@ -53,13 +70,13 @@ class SetBroadcast:
             {
                 **(
                     {
-                        "audio": f"{ownerId}_{trackId}"
+                        "audio": f"{ownerId}_{trackId}",
                     }
                     if ownerId and trackId else dict()
                 ),
                 **(
                     {
-                        "target_ids": groupIds
+                        "target_ids": groupIds,
                     }
                     if groupIds else dict()
                 )
@@ -67,3 +84,5 @@ class SetBroadcast:
         )
 
         return bool(response)
+
+    set_broadcast = setBroadcast

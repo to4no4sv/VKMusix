@@ -19,10 +19,27 @@
 class GetLyrics:
     from typing import Union
 
-    from vkmusix.aio import asyncFunction
+    from vkmusix.aio import async_
 
-    @asyncFunction
+    @async_
     async def getLyrics(self, ownerId: int, trackId: int) -> Union[str, None]:
+        """
+        Получает текст трека.
+
+        `Пример использования`:
+
+        lyrics = client.getLyrics(
+            ownerId=-2001471901,
+            trackId=123471901,
+        )
+
+        print(lyrics)
+
+        :param ownerId: идентификатор владельца трека. (``int``)
+        :param trackId: идентификатор трека. (``int``)
+        :return: `При успехе`: текст трека (``str``). `Если трек не найден или текст отсутствует`: ``None``.
+        """
+
         lyrics = await self._req(
             "getLyrics",
             {
@@ -37,3 +54,5 @@ class GetLyrics:
         timestamps = lyrics.get("timestamps")
 
         return "\n".join([line.get("line") for line in timestamps if line.get("line") is not None] if timestamps else lyrics.get("text"))
+
+    get_lyrics = getLyrics

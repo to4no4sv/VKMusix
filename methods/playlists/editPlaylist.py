@@ -19,23 +19,27 @@
 class EditPlaylist:
     from typing import Union
 
-    from vkmusix.aio import asyncFunction
+    from vkmusix.aio import async_
 
-    @asyncFunction
-    async def editPlaylist(self, playlistId: int, title: Union[str, int] = None, description: Union[str, int] = None, photo: str = None, groupId: int = None) -> bool:
+    @async_
+    async def editPlaylist(self, playlistId: int, title: str = None, description: Union[str, None] = str(), photo: Union[str, None] = str(), groupId: int = None) -> bool:
         """
-        Изменяет информацию плейлиста, принадлежащего пользователю или группе.
+        Изменяет информацию о плейлисте.
 
-        Пример использования:\n
-        result = client.editPlaylist(playlistId="yourPlaylistId", title="prombl — npc", description="Release Date: December 24, 2021", photo="yourPhotoFilename", groupId="yourGroupId")\n
+        `Пример использования`:
+
+        result = client.editPlaylist(
+            title="Лучшая музыка в машину!!!",
+        )
+
         print(result)
 
-        :param playlistId: идентификатор плейлиста, информацию которого необходимо изменить.
-        :param title: новое название плейлиста. (Необязательно)
-        :param description: новое описание плейлиста. (Необязательно)
-        :param photo: новое фото плейлиста. (Необязательно)
-        :param groupId: идентификатор группы, в которой находится плейлист. (Необязательно)
-        :return: `True`, если информация плейлиста успешно обновлена, `False` в противном случае.
+        :param playlistId: идентификатор плейлиста. (``int``)
+        :param title: название плейлиста. (``str``, `optional`)
+        :param description: описание плейлиста. ``None`` для удаления. (``Union[str, None]``, `optional`)
+        :param photo: ссылка на фото плейлиста. ``None`` для удаления. Не для удаления не работает. (``Union[str, None]``, `optional`)
+        :param groupId: идентификатор группы, в которой находится плейлист. (``int``, `optional`)
+        :return: `При успехе`: ``True``. `Если информацию о плейлисте не удалось изменить`: ``False``.
         """
 
         if not any((title, description is not None, photo is not None)):
@@ -47,24 +51,22 @@ class EditPlaylist:
         params = {
             "playlist_id": playlistId,
             "owner_id": groupId,
-            **({"title": title} if title else {}),
-            **({"description": description} if description is not None else {})
+            **({"title": title} if title else dict()),
+            **({"description": description} if description != str() else dict())
         }
 
-        if not any(("title" in params, "description" in params, photo is not None)):
-            return False
+        if any(("title" in params, "description" in params)):
+            response = await self._req("editPlaylist", params)
+            editInfoStatus = bool(response)
 
         else:
-            if any(("title" in params, "description" in params)):
-                response = await self._req("editPlaylist", params)
-                editInfoStatus = bool(response)
+            editInfoStatus = None
 
-            else:
-                editInfoStatus = None
-
-        if any((editInfoStatus is True, editInfoStatus is None)) and photo is not None:
+        if any((editInfoStatus is True, editInfoStatus is None)) and photo != str():
             editPhotoStatus = await self._editPlaylistPhoto(playlistId, photo, groupId)
             if editInfoStatus is None:
                 editInfoStatus = editPhotoStatus
 
         return editInfoStatus
+
+    edit_playlist = editPlaylist

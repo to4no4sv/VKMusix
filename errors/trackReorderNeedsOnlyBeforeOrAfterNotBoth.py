@@ -20,5 +20,5 @@ from vkmusix.errors import Error
 
 class TrackReorderNeedsOnlyBeforeOrAfterNotBoth(Error, ValueError):
     def __init__(self) -> None:
-        self.ru = "Для изменения порядка аудиотрека необоходимо указать `beforeTrackId` или `afterTrackId`, но не оба типа."
+        self.ru = "Для изменения порядка трека необоходимо указать `beforeTrackId` или `afterTrackId`, но не оба типа."
         self.en = "To change the order of a track, you need to specify either `beforeTrackId`, or `afterTrackId`, but not both types."

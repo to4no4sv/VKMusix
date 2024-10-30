@@ -20,5 +20,5 @@ from vkmusix.errors import Error
 
 class TrackRestorationTimeEnded(Error, TimeoutError):
     def __init__(self) -> None:
-        self.ru = "Время, в течение которого восстановление аудиотрека было возможно, закончилось."
+        self.ru = "Время, в течение которого восстановление трека было возможно, закончилось."
         self.en = "The time during which track restoration was possible has ended."

@@ -19,18 +19,40 @@
 class GetArtistAlbums:
     from typing import Union, List
 
-    from vkmusix.aio import asyncFunction
+    from vkmusix.aio import async_
     from vkmusix.types import Album
 
-    @asyncFunction
-    async def getArtistAlbums(self, artistId: int) -> Union[List[Album], Album, None]:
+    @async_
+    async def getArtistAlbums(self, artistId: int, limit: int = None, offset: int = None) -> Union[List[Album], None]:
+        """
+        Получает альбомы артиста.
+
+        `Пример использования`:
+
+        albums = client.getArtistAlbums(
+            artistId=5696274288194638935,
+            limit=10,
+        )
+
+        print(albums)
+
+        :param artistId: идентификатор артиста. (``int``)
+        :param limit: лимит альбомов. (``int``, `optional`)
+        :param offset: сколько альбомов пропустить. (``int``, `optional`)
+        :return: `При успехе`: альбомы артиста (``list[types.Album]``). `Если артист не найден или альбомы отсутствуют`: ``None``.
+        """
+
         from vkmusix.types import Album
 
         albums = await self._req(
             "getAlbumsByArtist",
             {
                 "artist_id": artistId,
+                "count": limit,
+                "offset": offset,
             },
         )
 
         return self._finalizeResponse(albums.get("items"), Album)
+
+    get_artist_albums = getArtistAlbums

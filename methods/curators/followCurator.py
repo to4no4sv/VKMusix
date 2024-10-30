@@ -17,19 +17,23 @@
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
 class FollowCurator:
-    from vkmusix.aio import asyncFunction
+    from vkmusix.aio import async_
 
-    @asyncFunction
+    @async_
     async def followCurator(self, curatorId: int = None) -> bool:
         """
         Подписывается на обновления музыки куратора.
 
-        Пример использования:\n
-        result = client.followCurator(curatorId=28905875)\n
+        `Пример использования`:
+
+        result = client.followCurator(
+            curatorId=28905875,
+        )
+
         print(result)
 
-        :param curatorId: идентификатор куратора, на обновления которого необходимо подписаться. (int)
-        :return: `True`, если Вы успешно подписались на обновления музыки куратора, `False` в противном случае.
+        :param curatorId: идентификатор куратора (пользователь или группа). (``int``)
+        :return: `При успехе`: ``True``. `Если куратор не найден`: ``False``.
         """
 
         response = await self._req(
@@ -40,3 +44,5 @@ class FollowCurator:
         )
 
         return bool(response)
+
+    follow_curator = followCurator

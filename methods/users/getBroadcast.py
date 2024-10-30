@@ -19,38 +19,51 @@
 class GetBroadcast:
     from typing import Union
 
-    from vkmusix.aio import asyncFunction
+    from vkmusix.aio import async_
     from vkmusix.types import Track
 
-    @asyncFunction
-    async def getBroadcast(self, id: int = None) -> Union[Track, None, bool]:
+    @async_
+    async def getBroadcast(self, ownerId: int = None) -> Union[Track, None, bool]:
         """
-        Получает аудиотрек, транслируемый в статус.
+        Получает трек транслируемый в статус owner'а (пользователь или группа).
 
-        Пример использования для текущего пользователя:\n
-        result = client.getBroadcast()\n
-        print(result)
+        `Пример использования для получения трека, транслируемого в статус залогиненного пользователя`:
 
-        Пример использования для любого пользователя:\n
-        result = client.getBroadcast(id=1)\n
-        print(result)
+        track = client.getBroadcast()
 
-        :param id: идентификатор пользователя или группы, аудиотрек из статуса которого(ой) необходимо получить. (int, по умолчанию текущий пользователь)
-        :return: аудиотрек в виде объекта модели `Track`, `None` (если ничего не проигрывается), или `False` (если музыка не транслируется в статус, работает только для текущего пользователя).
+        print(track)
+
+        `Пример использования для получения трека, транслируемого в статус любого пользователя`:
+
+        track = client.getBroadcast(
+            ownerId=1,
+        )
+
+        print(track)
+
+        `Пример использования для получения трека, транслируемого в статус любой группы`:
+
+        track = client.getBroadcast(
+            ownerId=-1,
+        )
+
+        print(track)
+
+        :param ownerId: идентификатор owner'а (пользователь или группа). По умолчанию залогиненный пользователь. (``int``, `optional`)
+        :return: `Если трек транслируется в статус`: транслируемый трек (``types.Track``). `Если трек не транслируется в статус`: `только для залогиненного пользователя`: флаг, указывающий, транслируются ли треки в статус при проигрывании. (``bool``). `для любого owner'а (пользователь или группа)`: ``None``.
         """
 
         broadcast = await self._req(
             "status.get",
             (
                 {
-                    "user_id": id,
+                    "user_id": ownerId,
                 }
-                if id > 0 else
+                if ownerId > 0 else
                 {
-                    "group_id": -id,
+                    "group_id": -ownerId,
                 }
-            )
-            if id else None
+            ) if ownerId else None
         )
 
         audio = broadcast.get("audio")
@@ -59,9 +72,8 @@ class GetBroadcast:
 
             return self._finalizeResponse(audio, Track)
 
-        from vkmusix.utils import getSelfId
-
-        if not id or id == (await getSelfId(self)):
+        if not ownerId or ownerId == await self._getMyId():
             isBroadcastEnabled = (await self._req("getBroadcast")).get("enabled")
-            if not bool(isBroadcastEnabled):
-                return False
+            return bool(isBroadcastEnabled)
+
+    get_broadcast = getBroadcast

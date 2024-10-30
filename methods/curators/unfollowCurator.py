@@ -17,19 +17,23 @@
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
 class UnfollowCurator:
-    from vkmusix.aio import asyncFunction
+    from vkmusix.aio import async_
 
-    @asyncFunction
+    @async_
     async def unfollowCurator(self, curatorId: int = None) -> bool:
         """
         Отписывается от обновлений музыки куратора.
 
-        Пример использования:\n
-        result = client.unfollowCurator(curatorId=28905875)\n
+        `Пример использования`:
+
+        result = client.unfollowCurator(
+            curatorId=28905875,
+        )
+
         print(result)
 
-        :param curatorId: идентификатор куратора, от обновлений которого необходимо отписаться. (int)
-        :return: `True`, если Вы успешно отписались от обновлений музыки куратора, `False` в противном случае.
+        :param curatorId: идентификатор куратора (пользователь или группа). (``int``)
+        :return: `При успехе`: ``True``. `Если куратор не найден`: ``False``.
         """
 
         response = await self._req(
@@ -40,3 +44,5 @@ class UnfollowCurator:
         )
 
         return bool(response)
+
+    unfollow_curator = unfollowCurator

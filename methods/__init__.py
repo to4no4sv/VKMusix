@@ -16,12 +16,21 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
-from .artists import *
-from .albums import *
-from .tracks import *
-from .playlists import *
-from .searching import *
-from .users import *
-from .curators import *
-from .utils import *
-from .utils import _GetTracks
+from .search import Search
+from .artists import Artists
+from .tracks import Tracks
+from .playlists import Playlists
+from .users import Users
+from .curators import Curators
+from .other import Other
+
+class Methods(
+    Search,
+    Artists,
+    Tracks,
+    Playlists,
+    Users,
+    Curators,
+    Other,
+):
+    pass

@@ -17,24 +17,29 @@
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
 class Add:
-    from typing import Union, List, Tuple
+    from typing import Union, List
 
-    from vkmusix.aio import asyncFunction
+    from vkmusix.aio import async_
 
-    @asyncFunction
-    async def add(self, ownerIds: Union[int, List[int]], trackIds: Union[int, List[int]], playlistId: int = None, groupId: int = None) -> Union[Tuple[bool], bool]:
+    @async_
+    async def add(self, ownerIds: Union[List[int], int], trackIds: Union[List[int], int], playlistId: int = None, groupId: int = None) -> List[bool]:
         """
-        Добавляет аудиотрек(и) в музыку или плейлист пользователя или группы.
+        Добавляет треки в музыку или плейлист пользователя или группы.
 
-        Пример использования:\n
-        result = client.add(ownerIds=474499244, trackIds=456638035, playlistId="yourPlaylistId", groupId="yourGroupId")\n
+        `Пример использования`:
+
+        result = client.add(
+            ownerIds=-2001471901,
+            trackIds=123471901,
+        )
+
         print(result)
 
-        :param ownerIds: идентификатор(ы) владельца аудиотрека(ов) (пользователь или группа). (int или list)
-        :param trackIds: идентификатор(ы) аудиотрека(ов), который(е) необходимо добавить. (int или list)
-        :param playlistId: идентификатор плейлиста, в который необходимо добавить аудиотрек. (int, необязательно)
-        :param groupId: идентификатор группы, в музыку или плейлист которой необходимо добавить аудиотрек. (int, необязательно)
-        :return: кортеж, состоящий из `True`, если аудиотрек(и) успешно добавлен(ы), `False` в противном случае.
+        :param ownerIds: идентификаторы владельцев треков. (``Union[list[int], int]``)
+        :param trackIds: идентификаторы треков. (``Union[list[int], int]``)
+        :param playlistId: идентификатор плейлиста, в который необходимо добавить треки. (``int``, `optional`)
+        :param groupId: идентификатор группы, в музыку или плейлист которой необходимо добавить треки. (``int``, `optional`)
+        :return: Статусы добавления треков (``list[bool]``). `При успехе`: ``True``. `Если трек не удалось добавить`: ``False``.
         """
 
         if type(ownerIds) != type(trackIds):
@@ -43,14 +48,12 @@ class Add:
         elif isinstance(ownerIds, list) and isinstance(trackIds, list) and len(ownerIds) != len(trackIds):
             self._raiseError("ownerIdsAndTrackIdsLenDifferent")
 
-        if not (isinstance(ownerIds, list) and isinstance(trackIds, list)):
+        if not all((isinstance(ownerIds, list), isinstance(trackIds, list))):
             ownerIds = [ownerIds]
             trackIds = [trackIds]
 
         if not groupId:
-            from vkmusix.utils import getSelfId
-
-            groupId = await getSelfId(self)
+            groupId = await self._getMyId()
 
         method = "add"
         if playlistId:
@@ -79,4 +82,4 @@ class Add:
 
             results.append(bool(response))
 
-        return results[0] if len(results) == 0 else tuple(results)
+        return results

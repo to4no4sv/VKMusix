@@ -19,22 +19,28 @@
 class GetArtist:
     from typing import Union
 
-    from vkmusix.aio import asyncFunction
+    from vkmusix.aio import async_
     from vkmusix.types import Artist
 
-    @asyncFunction
+    @async_
     async def getArtist(self, artistId: int, includeAlbums: bool = False, includeTracks: bool = False) -> Union[Artist, None]:
         """
-        Получает информацию об артисте по его идентификатору.
+        Получает информацию об артисте.
 
-        Пример использования:\n
-        result = client.getArtist(artistId=5696274288194638935, includeAlbums=True, includeTracks=True)\n
-        print(result)
+        `Пример использования`:
 
-        :param artistId: идентификатор артиста, информацию о котором необходимо получить. (int)
-        :param includeAlbums: флаг, указывающий, необходимо ли включать альбомы артиста в ответ. (bool, по умолчанию `False`)
-        :param includeTracks: флаг, указывающий, необходимо ли включать треки артиста в ответ. (bool, умолчанию `False`)
-        :return: информация об артисте в виде объекта модели `Artist`, или `None` (если артист не найден).
+        artist = client.getArtist(
+            artistId=5696274288194638935,
+            includeAlbums=True,
+            includeTracks=True,
+        )
+
+        print(artist)
+
+        :param artistId: идентификатор артиста. (``int``)
+        :param includeAlbums: флаг, указывающий, небходимо ли также получить альбомы. (``bool``, `optional`)
+        :param includeTracks: флаг, указывающий, небходимо ли также получить треки. (``bool``, `optional`)
+        :return: `При успехе`: информация об артисте (``types.Artist``). `Если артист не найден`: ``None``.
         """
 
         from asyncio import gather
@@ -68,3 +74,5 @@ class GetArtist:
             artist["tracks"] = responses[2 if includeAlbums else 1]
 
         return self._finalizeResponse(artist, Artist)
+
+    get_artist = getArtist

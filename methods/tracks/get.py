@@ -19,22 +19,28 @@
 class Get:
     from typing import Union
 
-    from vkmusix.aio import asyncFunction
+    from vkmusix.aio import async_
     from vkmusix.types import Track
 
-    @asyncFunction
+    @async_
     async def get(self, ownerId: int, trackId: int, includeLyrics: bool = False) -> Union[Track, None]:
         """
-        Получает информацию об аудиотреке по его идентификатору.
+        Получает информацию о треке.
 
-        Пример использования:\n
-        result = client.get(ownerId=474499244, trackId=456638035, includeLyrics=True)\n
-        print(result)
+        `Пример использования`:
 
-        :param ownerId: идентификатор владельца аудиотрека (пользователь или группа). (int)
-        :param trackId: идентификатор аудиотрека, информацию о котором необходимо получить. (int)
-        :param includeLyrics: флаг, указывающий, необходимо ли включать текст трека в ответ. (bool, по умолчанию `False`)
-        :return: информация об аудиотреке в виде объекта модели `Track`, или `None` (если аудиотрек не найден).
+        track = client.get(
+            ownerId=-2001471901,
+            trackId=123471901,
+            includeLyrics=True,
+        )
+
+        print(track)
+
+        :param ownerId: идентификатор владельца трека. (``int``)
+        :param trackId: идентификатор трека. (``int``)
+        :param includeLyrics: флаг, указывающий, небходимо ли также получить текст. (``bool``, `optional`)
+        :return: `При успехе`: информация о треке (``types.Track``). `Если трек не найден`: ``None``.
         """
 
         from asyncio import gather

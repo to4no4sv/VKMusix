@@ -19,27 +19,36 @@
 class GetPlaylist:
     from typing import Union
 
-    from vkmusix.aio import asyncFunction
-    from vkmusix.types import Playlist
+    from vkmusix.aio import async_
+    from vkmusix.types import Album, Playlist
 
-    @asyncFunction
-    async def getPlaylist(self, playlistId: int, ownerId: int, includeTracks: bool = False) -> Union[Playlist, None]:
+    @async_
+    async def getPlaylist(self, playlistId: int, ownerId: int = None, includeTracks: bool = False) -> Union[Playlist, Album, None]:
         """
-        Получает информацию о плейлисте по его идентификатору.
+        Получает информацию о плейлисте или альбоме.
 
-        Пример использования:\n
-        result = client.getPlaylist(playlistId=1, ownerId=-215973356, includeTracks=True)\n
-        print(result)
+        `Пример использования`:
 
-        :param playlistId: идентификатор плейлиста, информацию о котором необходимо получить. (int)
-        :param ownerId: идентификатор владельца плейлиста (пользователь или группа). (int, по умолчанию текущий пользователь)
-        :param includeTracks: флаг, указывающий, необходимо ли включать треки плейлиста в ответ. (bool, по умолчанию `False`)
-        :return: информация о плейлисте в виде объекта модели `Playlist`, или `None` (если плейлист не найден).
+        playlist = client.getPlaylist(
+            ownerId=-2000201020,
+            playlistId=19201020,
+            includeTracks=True,
+        )
+
+        print(playlist)
+
+        :param playlistId: идентификатор плейлиста или альбома. (``int``)
+        :param ownerId: идентификатор владельца плейлиста или альбома (пользователь или группа). (``int``, `optional`)
+        :param includeTracks: флаг, указывающий, небходимо ли также получить треки. (``bool``, `optional`)
+        :return: `При успехе`: информация о плейлисте или альбоме (``Union[types.Playlist, types.Album]``). `Если плейлист или альбом не найден`: ``None``.
         """
 
         from asyncio import gather
 
         from vkmusix.types import Playlist
+
+        if not ownerId:
+            ownerId = await self._getMyId()
 
         tasks = [self._req(
             "getPlaylistById",
@@ -62,3 +71,5 @@ class GetPlaylist:
             playlist["tracks"] = responses[1]
 
         return self._finalizeResponse(playlist, Playlist)
+
+    get_playlist = getPlaylist

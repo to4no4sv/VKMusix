@@ -27,8 +27,3 @@ headers = {
 }
 
 playlistsOwnerId = -183773637
-
-import pytz
-
-utcTz = pytz.utc
-moscowTz = pytz.timezone("Europe/Moscow")

@@ -16,43 +16,42 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
-class GetRelatedArtists:
+class GetSearchTrends:
     from typing import Union, List
 
     from vkmusix.aio import async_
-    from vkmusix.types import Artist
 
     @async_
-    async def getRelatedArtists(self, artistId: int, limit: int = None, offset: int = None) -> Union[List[Artist], None]:
+    async def getSearchTrends(self, limit: int = None, offset: int = None) -> Union[List[str], None]:
         """
-        Получает похожих артистов.
+        Получает популярные поисковые запросы.
 
         `Пример использования`:
 
-        artists = client.getRelatedArtists(
-            artistId=5696274288194638935,
+        searches = client.getSearchTrends(
             limit=10,
         )
 
-        print(artists)
+        print(searches)
 
-        :param artistId: идентификатор артиста. (``int``)
-        :param limit: лимит артистов. (``int``, `optional`)
-        :param offset: сколько артистов пропустить. (``int``, `optional`)
-        :return: `При успехе`: похожие артисты (``list[types.Artist]``). `Если артист не найден или похожие артисты отсутствуют`: ``None``.
+        :param limit: лимит поисковых запросов. (``int``, `optional`)
+        :param offset: сколько поисковых запросов пропустить. (``int``, `optional`)
+        :return: `При успехе`: поисковые запросы (``list[str]``). `Если поисковые запросы отсутствуют`: ``None``.
         """
 
-        from vkmusix.types import Artist
-
-        artists = await self._req(
-            "getRelatedArtistsById",
+        searchTrends = await self._req(
+            "getSearchTrends",
             {
-                "artist_id": artistId,
                 "count": limit,
                 "offset": offset,
             },
         )
 
-        return self._finalizeResponse(artists.get("artists"), Artist)
+        searchTrends = [
+            item.get("name")
+            for item in searchTrends.get("items")
+        ]
 
-    get_related_artists = getRelatedArtists
+        return searchTrends if searchTrends else None
+
+    get_search_trends = getSearchTrends

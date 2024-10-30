@@ -22,48 +22,56 @@ import base64
 
 from typing import Union, List, Type
 
-from vkmusix.aio import asyncFunction
+from vkmusix.aio import async_
 from vkmusix.config import VKAPI, VKAPIVersion, RuCaptchaAPI
 from vkmusix.errors import *
 
 from vkmusix.utils import checkFile
-from vkmusix.cookies import getCookies, checkCookies
 from vkmusix.webClient import Client as WebClient
 
-from vkmusix.methods import *
+from vkmusix.methods import Methods
 from vkmusix.enums import Language
 
-class Client(
-    Artists,
-    Albums,
-    Tracks,
-    Playlists,
-    Searching,
-    Users,
-    Curators,
-    Utils,
-):
+class Client(Methods):
     """
-    Класс для взаимодействия с VK Music.
+    Класс, который вы будете использовать для каждого взаимодействия с VK Music.
 
-    Аргументы:
-        token (str, optional): Токен доступа к ВКонтакте API.\n
-        RuCaptchaKey (str, optional): Ключ для решения капчи через сервис RuCaptcha. Если не указан, капча может потребовать ручного решения.\n
-        language (Language, optional): Язык ошибок (например, `ru` для русского, `en` для английского). Если не указан, используются оба языка.\n
-        proxies (dict, optional): прокси, которые будут использоваться при запросах. Формат {"протокол": "логин:пароль@IP:порт"}\n
-        login (str, optional): Логин аккаунта ВКонтакте. Используется для получения cookie, необходимых для некоторых методов.\n
-        password (str, optional): Пароль аккаунта ВКонтакте. Используется для получения cookie, необходимых для некоторых методов.\n
-        cookieFilename (str, optional): Название файла c cookie. По умолчанию введённый логин.
+    Параметры:
+        token (str, optional): Токен доступа к ВКонтакте API с правами на аудио.\n
+        RuCaptchaKey (str, optional): Ключ доступа к RuCaptcha API для автоматического решения капч через этот сервис. Если не указан, капча потребует ручного решения.\n
+        language (enums.Language, optional): Язык ошибок (например, Language.Russian для русского, Language.English для английского). Если не указан, используются все языки.\n
+        proxies (dict, optional): Прокси, которые будут использоваться при запросах. Формат: {"http": "IP:port"} или {"socks5": "login:password@IP:port"}.\n
 
-    Пример использования:
+    Создания экземпляра:
+        from vkmusix import Client
         from vkmusix.enums import Language
-        client = Client(token="yourToken", RuCaptchaKey="yourRuCaptchaKey", language=Language.Russian, proxies={"http": "IP:port", "socks5": "login:password@IP:port"}, login="admin@vkmusix.ru", password="vkmusix.ru", cookieFilename="admin")
-        result = client.searchArtists("prombl")
-        print(result)
+
+        client = Client(
+            token="...",
+            RuCaptchaKey="...",
+            language=Language.Russian or Language.English,
+            proxies={
+                "http": "IP:port",
+                "socks5": "login:password@IP:port",
+            },
+        ) # Все параметры необязательны
+
+        # Или с использованием with
+
+        with Client(
+            token="...",
+            RuCaptchaKey="...",
+            language=Language.Russian or Language.English,
+            proxies={
+                "http": "IP:port",
+                "socks5": "login:password@IP:port",
+            },
+        ) as client:
+            ...
     """
 
 
-    def __init__(self, token: str = None, RuCaptchaKey: str = None, language: Language = None, proxies: dict = None, login: str = None, password: str = None, cookieFilename: str = None) -> None:
+    def __init__(self, token: str = None, RuCaptchaKey: str = None, language: Language = None, proxies: dict = None) -> None:
         import sys
         if sys.version_info < (3, 6):
             ruWarning = "Внимание: Работоспособость этой библиотеки гарантируется только при Python 3.6 или выше. Вы используете версию {}."
@@ -100,30 +108,6 @@ class Client(
 
             self._proxies = newProxies
 
-        if login or cookieFilename:
-            cookieFileExist = False
-            if not cookieFilename:
-                cookieFilename = login
-
-            if checkFile(f"{cookieFilename}.VKCookie"):
-                cookieFileExist = True
-
-            if not cookieFileExist:
-                if login and password:
-                    cookieFilename = getCookies(login, password, cookieFilename)
-                    if isinstance(cookieFilename, dict):
-                        self._raiseError(cookieFilename.get("error"))
-
-                else:
-                    self._raiseError("VKCookieFileNotFound")
-
-            self._cookies = checkCookies(cookieFilename)
-            if isinstance(self._cookies, dict):
-                self._raiseError(self._cookies.get("error"))
-
-        else:
-            self._cookies = None
-
         self._session = httpx.AsyncClient(proxies=self._proxies)
         self._client = WebClient(self._session)
 
@@ -154,7 +138,7 @@ class Client(
                 )
 
 
-    @asyncFunction
+    @async_
     async def checkUpdates(self) -> None:
         if self._closed:
             self._raiseError("sessionClosed")
@@ -199,10 +183,10 @@ class Client(
             pass
 
 
-    @asyncFunction
+    @async_
     async def close(self) -> None:
         """
-        Закрывает текующую сессию. Для отправки новых запросов потребуется создать новый объект класса `Client` или использовать метод `reconnect`.
+        Закрывает текующую сессию. Для отправки новых запросов потребуется создать новый объект класса `Client` или использовать метод `client.reconnect()`.
         """
 
         if self._closed:
@@ -213,7 +197,7 @@ class Client(
         await self._session.aclose()
 
 
-    @asyncFunction
+    @async_
     async def reconnect(self) -> None:
         """
         Пересоздаёт закрытую сессию.
@@ -228,8 +212,16 @@ class Client(
         self._client = WebClient(self._session)
 
 
-    @asyncFunction
-    async def _req(self, method: str, params: dict = None, HTTPMethod: str = "GET") -> Union[dict, None]:
+    @async_
+    async def _getMyId(self) -> int:
+        if not self._me:
+            self._me = await self.getMe()
+
+        return self._me.get("id")
+
+
+    @async_
+    async def _req(self, method: str, params: dict = None, json: dict = None, data: any = None, cookies: dict = None, headers: dict = None, files: dict = None, version: float = None, httpMethod: str = None) -> Union[dict, None]:
         if self._closed:
             self._raiseError("sessionClosed")
 
@@ -237,7 +229,11 @@ class Client(
             params = dict()
 
         else:
-            params = {k: v for k, v in params.items() if v is not None}
+            params = {
+                k: v
+                for k, v in params.items()
+                if v is not None
+            }
 
             limit = params.get("count")
 
@@ -254,7 +250,19 @@ class Client(
         url = f"{VKAPI}{method}"
         fullParams = {**params, **self._params}
 
-        req = await self._client.req(url, fullParams, method=HTTPMethod)
+        if version:
+            fullParams["v"] = version
+
+        req = await self._client.req(
+            url,
+            fullParams,
+            json,
+            data,
+            cookies,
+            headers,
+            files,
+            method=httpMethod.upper() if httpMethod and isinstance(httpMethod, str) else "GET",
+        )
 
         while isinstance(req, dict) and req.get("error"):
             error = req.get("error")
@@ -300,9 +308,15 @@ class Client(
                 self._raiseError("userWasDeletedOrBanned")
 
             elif errorCode == 100:
+                if "One of the parameters" in error.get("error_msg"):
+                    return error
+
                 return
 
             elif errorCode == 104:
+                if method == "audio.getLyrics":
+                    return
+
                 self._raiseError("notFound")
 
             else:
@@ -314,7 +328,7 @@ class Client(
         return req
 
 
-    @asyncFunction
+    @async_
     async def _solveCaptcha(self, captchaUrl: str) -> str:
         imageBytes = await self._client.req(captchaUrl, responseType="file")
         captchaImageInBase64 = base64.b64encode(imageBytes).decode("utf-8")
@@ -328,11 +342,22 @@ class Client(
             "languagePool": "rn",
         }
 
-        taskId = (await self._client.req(RuCaptchaAPI + "createTask", json=RuCaptchaParams, method="POST")).get("taskId")
+        taskId = (await self._client.req(
+            f"{RuCaptchaAPI}createTask",
+            json=RuCaptchaParams,
+            method="POST",
+        )).get("taskId")
 
         while True:
             await asyncio.sleep(5)
-            taskResult = await self._client.req(RuCaptchaAPI + "getTaskResult", json={"clientKey": self._RuCaptchaKey, "taskId": taskId}, method="POST")
+            taskResult = await self._client.req(
+                f"{RuCaptchaAPI}getTaskResult",
+                json={
+                    "clientKey": self._RuCaptchaKey,
+                    "taskId": taskId,
+                },
+                method="POST",
+            )
             errorId = taskResult.get("errorId")
 
             if errorId == 0 and taskResult.get("status") == "ready":
@@ -345,7 +370,11 @@ class Client(
                 self._raiseError("RuCaptchaZeroBalance")
 
             elif errorId == 12:
-                taskId = (await self._client.req(RuCaptchaAPI + "createTask", json=RuCaptchaParams, method="POST")).get("taskId")
+                taskId = (await self._client.req(
+                    f"{RuCaptchaAPI}createTask",
+                    json=RuCaptchaParams,
+                    method="POST",
+                )).get("taskId")
 
             elif errorId == 21:
                 self._raiseError("RuCaptchaBannedIP")
@@ -377,7 +406,6 @@ class Client(
 
             "invalidMethod": InvalidMethod,
             "accessDenied": AccessDenied,
-            "accessDeniedWithoutCookie": AccessDeniedWithoutCookie,
 
             "userWasDeletedOrBanned": UserWasDeletedOrBanned,
             "trackRestorationTimeEnded": TrackRestorationTimeEnded,
@@ -425,21 +453,21 @@ class Client(
         if not (response or response is False):
             return
 
+        wasList = True
         if not isinstance(response, list):
+            wasList = False
             response = [response]
 
         for index, obj in enumerate(response):
-            from vkmusix.types import Playlist
+            from vkmusix.types import Album, Playlist
 
-            if objectType is Playlist:
-                playlistType = obj.get("type")
+            if objectType in [Album, Playlist]:
+                type_ = obj.get("type")
 
-                if playlistType in [0, 5]:
-                    obj = objectType(obj, False if obj.get("original") else True, client=self)
+                if type_ in [0, 5]:
+                    obj = Playlist(obj, False if obj.get("original") else True, client=self)
 
-                elif playlistType == 1:
-                    from vkmusix.types import Album
-
+                elif type_ == 1:
                     obj = Album(obj, True, client=self)
 
                 else:
@@ -450,4 +478,4 @@ class Client(
 
             response[index] = obj
 
-        return response if len(response) > 1 else response[0]
+        return response if wasList else response[0]

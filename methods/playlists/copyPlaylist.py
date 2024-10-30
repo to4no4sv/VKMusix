@@ -19,56 +19,63 @@
 class CopyPlaylist:
     from typing import Union
 
-    from vkmusix.aio import asyncFunction
+    from vkmusix.aio import async_
     from vkmusix.types import Playlist
 
-    @asyncFunction
-    async def copyPlaylist(self, playlistId: int, ownerId: int = None, groupId: int = None, chatId: int = None, newTitle: Union[str, None] = str(), newDescription: Union[str, None] = str(), newPhoto: Union[str, None] = str()) -> Union[Playlist, None]:
+    @async_
+    async def copyPlaylist(self, playlistId: int, ownerId: int = None, groupId: int = None, chatId: int = None, title: Union[str, None] = str(), description: Union[str, None] = str(), photo: Union[str, None] = str()) -> Union[Playlist, None]:
         """
-        Копирует плейлист, принадлежий пользователю или группе в музыку пользователя или группы.
+        Копирует плейлист или альбом в музыку пользователя или группы.
 
-        Пример использования:\n
-        result = client.copyPlaylist(playlistId=1, ownerId=-215973356, groupId="yourGroupId", chatId="yourChatId", newTitle=None, newDescription=None, newPhoto=None)\n
-        print(result)
+        `Пример использования`:
 
-        :param playlistId: идентификатор плейлиста, который необходимо скопировать. (int)
-        :param ownerId: идентификатор владельца плейлиста (пользователь или группа). (int, по умолчанию текущий пользователь)
-        :param groupId: идентификатор группы, в которую необходимо скопировать плейлист. (int, необязательно)
-        :param chatId: идентификатор чата, к которому небходимо привязать плейлист. (int, формат: `2000000000 + идентификатор чата`, необязательно)
-        :param newTitle: новое название плейлиста, `None` для использования текущих даты и времени. (str или None, по умолчанию оригинальное название)
-        :param newDescription: новое описание плейлиста, `None` для удаления описания. (str или None, по умолчанию оригинальное описание)
-        :param newPhoto: новая обложка плейлиста, `None` для удаления обложки. (str или None, по умолчанию оригинальная обложка)
-        :return: скопированный плейлист в виде объекта модели `Playlist` с атрибутами `ownerId`, `playlistId`, `id`, `url` и `own`, если плейлист успешно скопирован, `None` в противном случае.
+        playlist = client.copyPlaylist(
+            ownerId=-2000201020,
+            playlistId=19201020,
+        )
+
+        print(playlist)
+
+        :param playlistId: идентификатор плейлиста или альбома. (``int``)
+        :param ownerId: идентификатор владельца плейлиста или альбома (пользователь или группа). (``int``, `optional`)
+        :param groupId: идентификатор группы, в которую необходимо скопировать плейлист или альбом. (``int``, `optional`)
+        :param chatId: идентификатор чата, к которому необходимо привязать скопированный плейлист или альбом. (``int``, `optional`)
+        :param title: название плейлиста. ``None`` для удаления. (``Union[str, None]``, `optional`)
+        :param description: описание плейлиста. ``None`` для удаления. (``Union[str, None]``, `optional`)
+        :param photo: ссылка на фото плейлиста. ``None`` для удаления. Не для удаления не работает. (``Union[str, None]``, `optional`)
+        :return: `При успехе`: информация о скопированном плейлисте или альбоме (``Union[types.Playlist, types.Album]``). `Если плейлист или альбом не найден`: ``None``.
         """
 
         from datetime import datetime
 
-        from vkmusix.config import utcTz, moscowTz
-
         if not ownerId:
-            from vkmusix.utils import getSelfId
-
-            ownerId = await getSelfId(self)
+            ownerId = await self._getMyId()
 
         playlist = await self.getPlaylist(playlistId, ownerId, True)
 
-        title = playlist.title
-        description = playlist.description
-        photo = playlist.photo
+        title_ = playlist.title
+        description_ = playlist.description
+        photo_ = playlist.photo
 
-        if newTitle != str():
-            title = newTitle if newTitle is not None else datetime.utcnow().replace(tzinfo=utcTz).astimezone(moscowTz).strftime("%d.%m.%Y / %H:%M:%S")
+        if title != str():
+            title_ = title if title is not None else datetime.utcnow().strftime("%d.%m.%Y / %H:%M:%S")
 
-        if newDescription != str():
-            description = newDescription
+        if description != str():
+            description_ = description
 
-        if newPhoto != str():
-            photo = None
+        if photo != str():
+            photo_ = None if True else photo
 
-        elif photo:
-            _, photo = photo.popitem()
+        elif photo_:
+            _, photo_ = photo_.popitem()
 
-        newPlaylist = await self.createPlaylist(title, description, photo, groupId, chatId)
+        newPlaylist = await self.createPlaylist(
+            title_,
+            description_,
+            photo_,
+            groupId,
+            chatId,
+        )
 
         tracks = playlist.tracks
         if tracks:
@@ -76,3 +83,5 @@ class CopyPlaylist:
             await newPlaylist.addTracks(list(ownerIds), list(trackIds))
 
         return newPlaylist
+
+    copy_playlist = copyPlaylist

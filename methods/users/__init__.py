@@ -16,26 +16,29 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
+from .getTrackCount import GetTrackCount
+
 from .getPlaylists import GetPlaylists
 from .getAllPlaylists import GetAllPlaylists
-from .getTracks import GetTracks
-from .getTrackCount import GetTrackCount
+
 from .getBroadcast import GetBroadcast
+from .setBroadcast import SetBroadcast
 
 from .reorder import Reorder
-from .setBroadcast import SetBroadcast
+
 from .followOwner import FollowOwner
 from .unfollowOwner import UnfollowOwner
 
 class Users(
     GetPlaylists,
     GetAllPlaylists,
-    GetTracks,
-    GetTrackCount,
-    GetBroadcast,
 
+    GetTrackCount,
     Reorder,
+
+    GetBroadcast,
     SetBroadcast,
+
     FollowOwner,
     UnfollowOwner,
 ):

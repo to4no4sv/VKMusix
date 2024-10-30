@@ -21,19 +21,27 @@ import asyncio
 
 import httpx
 
-from vkmusix.aio import asyncFunction
-from vkmusix.utils import addHTTPsToUrl
-
 retries = 5
 timeout = 20
 sleepTime = .25
 
+def addHTTPsToUrl(url: str) -> str:
+    if not ("https://" in url or "http://" in url):
+        url = "https://" + url
+
+    return url
+
 class Client:
+    from typing import Union
+
+    from vkmusix.aio import async_
+
     def __init__(self, client: httpx.AsyncClient) -> None:
         self.client = client
 
-    @asyncFunction
-    async def request(self, url: str, params: dict = None, json: dict = None, data: any = None, cookies: dict = None, headers: dict = None, files: dict = None, responseType: str = "json", method: str = "GET") -> any:
+
+    @async_
+    async def request(self, url: str, params: dict = None, json: dict = None, data: Union[str, dict] = None, cookies: dict = None, headers: dict = None, files: dict = None, responseType: str = "json", method: str = "GET") -> any:
         responseType = responseType.lower()
         retriesLocal = retries
 
@@ -57,7 +65,7 @@ class Client:
                     headers=headers,
                     files=files,
                     timeout=httpx.Timeout(timeout),
-                    follow_redirects=False
+                    follow_redirects=False,
                 )
 
                 if responseType == "json":

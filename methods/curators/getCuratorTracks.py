@@ -19,22 +19,27 @@
 class GetCuratorTracks:
     from typing import Union, List
 
-    from vkmusix.aio import asyncFunction
+    from vkmusix.aio import async_
     from vkmusix.types import Track
 
-    @asyncFunction
-    async def getCuratorTracks(self, curatorId: int, limit: int = None, offset: int = None) -> Union[List[Track], Track, None]:
+    @async_
+    async def getCuratorTracks(self, curatorId: int, limit: int = None, offset: int = None) -> Union[List[Track], None]:
         """
-        Получает аудиотреки, принадлежащие куратору.
+        Получает треки куратора.
 
-        Пример использования:\n
-        result = client.getCuratorTracks(curatorId=28905875, limit=5)\n
-        print(result)
+        `Пример использования`:
 
-        :param curatorId: идентификатор куратора (пользователь или группа). (int)
-        :param limit: максимальное количество аудиотреков, которое необходимо вернуть. (int, необязательно)
-        :param offset: количество результатов, которые необходимо пропустить. (int, необязательно)
-        :return: список аудиотреков в виде объектов модели `Track`, аудиотрек в виде объекта модели `Track` (если он единственный), или `None` (если неверный `curatorId` или аудиотреки отсутствуют).
+        tracks = client.getCuratorTracks(
+            curatorId=28905875,
+            limit=10,
+        )
+
+        print(tracks)
+
+        :param curatorId: идентификатор куратора (пользователь или группа). (``int``)
+        :param limit: лимит треков. (``int``, `optional`)
+        :param offset: сколько треков пропустить. (``int``, `optional`)
+        :return: `При успехе`: треки куратора (``list[types.Track]``). `Если куратор не найден или треки отсутствуют`: ``None``.
         """
 
         from vkmusix.types import Track
@@ -49,3 +54,5 @@ class GetCuratorTracks:
         )
 
         return self._finalizeResponse(tracks.get("items"), Track)
+
+    get_curator_tracks = getCuratorTracks

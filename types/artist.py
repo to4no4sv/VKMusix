@@ -23,17 +23,26 @@ class Artist(Base):
     Класс, представляющий артиста.
 
     Атрибуты:
-        nickname (str): псевдоним артиста.\n
-        photo (dict, optional): словарь с размерами и URL фотографий артиста, отсортированный по размеру.\n
-        albums (list[Album], optional): список альбомов артиста, представленных объектами класса `Album`.\n
-        tracks (list[Track], optional): список аудиотреков артиста, представленных объектами класса `Track`.\n
-        id (str): идентификатор артиста.\n
-        url (str): URL страницы артиста.
+        nickname (str): псевдоним артиста.
+
+        photo (dict, optional): словарь с ссылками на различные размеры фотографии артиста, отсортированные по возрастанию.
+
+        albums (list[types.Album], optional): альбомы артиста. Доступны при получении через client.getArtist(includeAlbums=True).
+
+        tracks (list[types.Track], optional): треки артиста. Доступны при получении через client.getArtist(includeTracks=True).
+
+        domain (str, optional): уникальное имя артиста, использующееся в ссылке.
+
+        id (int, optional): идентификатор артиста. Недоступен для Various Artists.
+
+        url (str, optional): ссылка на артиста в формате https://vk.com/artist/{domain or id}. Недоступна для Various Artists.
+
+        raw (dict): необработанные данные, полученные от ВКонтакте.
     """
 
     from typing import Union, List
 
-    from vkmusix.aio import asyncFunction
+    from vkmusix.aio import async_
     from vkmusix.types.album import Album
     from vkmusix.types.track import Track
 
@@ -50,97 +59,155 @@ class Artist(Base):
 
         photo = artist.get("photo")
         if photo:
-            photoDict = {f'{photo.get("width")}': re.sub(r"\.(j|jp|jpg)$", str(), photo.get("url")[:photo.get("url").rfind("&c_uniq_tag=")][:photo.get("url").rfind("&type=")]) for photo in photo}
+            photoDict = {int(photo.get("width")): re.sub(r"\.(j|jp|jpg)$", str(), photo.get("url")[:photo.get("url").rfind("&c_uniq_tag=")][:photo.get("url").rfind("&type=")]) for photo in photo}
             self.photo = dict(sorted(photoDict.items(), key=lambda item: (int(item[0]))))
 
         else:
             photo = artist.get("photos")
-            self.photo = dict(sorted({f'{photo.get("width")}': photo.get("url") for photo in photo[0].get("photo")}.items(), key=lambda item: (int(item[0])))) if photo else None
+            self.photo = dict(sorted({int(photo.get("width")): photo.get("url") for photo in photo[0].get("photo")}.items(), key=lambda item: (int(item[0])))) if photo else None
 
         self.albums = artist.get("albums")
         self.tracks = artist.get("tracks")
 
-        self.id = artist.get("id") or artist.get("artist_id")
-
-        if self.id:
-            domain = artist.get("domain")
-            self.url = VK + "artist/" + (domain if domain else self.id)
-
-        else:
-            self.url = None
+        domain = artist.get("domain")
+        id = artist.get("id") or artist.get("artist_id")
+        self.domain = domain if domain != id else None
+        self.id = id
+        self.url = f"{VK}artist/{self.domain or self.id}" if self.domain or self.id else None
 
         self.raw = artist
 
 
-    @asyncFunction
-    async def get(self, includeAlbums: bool = False, includeTracks: bool = False) -> "Artist":
+    @async_
+    async def get(self, includeAlbums: bool = False, includeTracks: bool = False) -> Union["Artist", None]:
         """
         Получает информацию об артисте.
 
-        Пример использования:\n
-        result = artist.get(includeAlbums=True, includeTracks=True)\n
-        print(result)
+        `Пример использования`:
 
-        :param includeAlbums: флаг, указывающий, необходимо ли включать альбомы артиста в ответ. (bool, по умолчанию `False`)
-        :param includeTracks: флаг, указывающий, необходимо ли включать треки артиста в ответ. (bool, умолчанию `False`)
-        :return: информация об артисте в виде объекта модели `Artist`.
+        artist = artist.get(
+            includeAlbums=True,
+            includeTracks=True,
+        )
+
+        print(artist)
+
+        :param includeAlbums: флаг, указывающий, небходимо ли также получить альбомы. (``bool``, `optional`)
+        :param includeTracks: флаг, указывающий, небходимо ли также получить треки. (``bool``, `optional`)
+        :return: `При успехе`: информация об артисте (``types.Artist``). `Если артист не найден`: ``None``.
         """
 
-        return await self._client.getArtist(self.id, includeAlbums, includeTracks)
+        return await self._client.getArtist(
+            self.id,
+            includeAlbums,
+            includeTracks,
+        )
 
 
-    @asyncFunction
-    async def getAlbums(self) -> Union[List[Album], Album, None]:
-        return await self._client.getArtistAlbums(self.id)
+    @async_
+    async def getAlbums(self, limit: int = None, offset: int = None) -> Union[List[Album], None]:
+        """
+        Получает альбомы артиста.
+
+        `Пример использования`:
+
+        albums = artist.getAlbums(
+            limit=10,
+        )
+
+        print(albums)
+
+        :param limit: лимит альбомов. (``int``, `optional`)
+        :param offset: сколько альбомов пропустить. (``int``, `optional`)
+        :return: `При успехе`: альбомы артиста (``list[types.Album]``). `Если артист не найден или альбомы отсутствуют`: ``None``.
+        """
+
+        return await self._client.getArtistAlbums(
+            self.id,
+            limit,
+            offset,
+        )
 
 
-    @asyncFunction
-    async def getTracks(self) -> Union[List[Track], Track, None]:
-        return await self._client.getArtistTracks(self.id)
+    @async_
+    async def getTracks(self, limit: int = None, offset: int = None) -> Union[List[Track], None]:
+        """
+        Получает треки артиста.
+
+        `Пример использования`:
+
+        tracks = artist.getTracks(
+            limit=10,
+        )
+
+        print(tracks)
+
+        :param limit: лимит треков. (``int``, `optional`)
+        :param offset: сколько треков пропустить. (``int``, `optional`)
+        :return: `При успехе`: треки артиста (``list[types.Track]``). `Если артист не найден или треки отсутствуют`: ``None``.
+        """
+
+        return await self._client.getArtistTracks(
+            self.id,
+            limit,
+            offset,
+        )
 
 
-    @asyncFunction
-    async def getRelated(self, limit: int = None) -> Union[List["Artist"], "Artist", None]:
+    @async_
+    async def getRelated(self, limit: int = None, offset: int = None) -> Union[List["Artist"], None]:
         """
         Получает похожих артистов.
 
-        Пример использования:\n
-        result = artist.getRelated(limit=5)\n
-        print(result)
+        `Пример использования`:
 
-        :param limit: максимальное количество артистов, которое необходимо вернуть. (int, необязательно)
-        :return: список артистов в виде объектов модели `Artist`, артист в виде объекта модели `Artist` (если он единственственный), или None (если `artistId` неверный или похожие артисты отсутствуют).
+        artists = artist.getRelated(
+            limit=10,
+        )
+
+        print(artists)
+
+        :param limit: лимит артистов. (``int``, `optional`)
+        :param offset: сколько артистов пропустить. (``int``, `optional`)
+        :return: `При успехе`: похожие артисты (``list[types.Artist]``). `Если артист не найден или похожие артисты отсутствуют`: ``None``.
         """
 
-        return await self._client.getRelatedArtists(self.id, limit)
+        return await self._client.getRelatedArtists(
+            self.id,
+            limit,
+            offset,
+        )
 
 
-    @asyncFunction
+    @async_
     async def follow(self) -> bool:
         """
         Подписывается на обновления музыки артиста.
 
-        Пример использования:\n
-        result = artist.follow()\n
+        `Пример использования`:
+
+        result = artist.follow()
+
         print(result)
 
-        :param artistId: идентификатор артиста, на обновления которого необходимо подписаться. (int)
-        :return: `True`, если Вы успешно подписались на обновления музыки артиста, `False` в противном случае.
+        :return: `При успехе`: ``True``. `Если артист не найден`: ``False``.
         """
 
         return await self._client.followArtist(self.id)
 
 
-    @asyncFunction
+    @async_
     async def unfollow(self) -> bool:
         """
         Отписывается от обновлений музыки артиста.
 
-        Пример использования:\n
-        result = artist.unfollow()\n
+        `Пример использования`:
+
+        result = artist.unfollow()
+
         print(result)
 
-        :return: `True`, если Вы успешно отписались от обновлений музыки артиста, `False` в противном случае.
+        :return: `При успехе`: ``True``. `Если артист не найден`: ``False``.
         """
 
         return await self._client.unfollowArtist(self.id)

@@ -17,21 +17,23 @@
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
 class GetPopular:
-    from typing import List
+    from typing import Union, List
 
-    from vkmusix.aio import asyncFunction
+    from vkmusix.aio import async_
     from vkmusix.types import Track
 
-    @asyncFunction
-    async def getPopular(self) -> List[Track]:
+    @async_
+    async def getPopular(self) -> Union[List[Track], None]:
         """
-        Получает популярные аудиотреки.
+        Получает популярные треки.
 
-        Пример использования:\n
-        result = client.getPopular()\n
-        print(result)
+        `Пример использования`:
 
-        :return: список аудиотреков в виде объектов модели `Track`.
+        tracks = client.getPopular()
+
+        print(tracks)
+
+        :return: `При успехе`: треки (``list[types.Track]``). `Если треки отсутствуют`: ``None``.
         """
 
         from vkmusix.config import playlistsOwnerId
@@ -39,3 +41,5 @@ class GetPopular:
         tracks = await self.getPlaylistTracks(1, playlistsOwnerId)
 
         return tracks
+
+    get_popular = getPopular

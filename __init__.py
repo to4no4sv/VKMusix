@@ -16,5 +16,5 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
-from .version import __version__
-from .client import Client
+from vkmusix.version import __version__
+from vkmusix.client import Client

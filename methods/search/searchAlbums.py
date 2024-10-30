@@ -16,30 +16,38 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
-class GetEditorsPick:
+class SearchAlbums:
     from typing import Union, List
 
     from vkmusix.aio import async_
-    from vkmusix.types import Track
+    from vkmusix.types import Album
 
     @async_
-    async def getEditorsPick(self) -> Union[List[Track], None]:
+    async def searchAlbums(self, query: str, limit: int = None, offset: int = None) -> Union[List[Album], None]:
         """
-        Получает треки, отобранные редакторами ВКонтакте.
+        Ищет альбомы.
 
         `Пример использования`:
 
-        tracks = client.getEditorsPick()
+        albums = client.searchAlbums(
+            query="Маленький ярче — ANDERFUL ELF",
+            limit=10,
+        )
 
-        print(tracks)
+        print(albums)
 
-        :return: `При успехе`: треки (``list[types.Track]``). `Если треки отсутствуют`: ``None``.
+        :param query: поисковой запрос. (``str``)
+        :param limit: лимит альбомов. (``int``, `optional`)
+        :param offset: сколько альбомов пропустить. (``int``, `optional`)
+        :return: `При успехе`: найденные альбомы (``list[types.Album]``). `Если альбомы не найдены`: ``None``.
         """
 
-        from vkmusix.config import playlistsOwnerId
+        from vkmusix.types import Album
 
-        tracks = await self.getPlaylistTracks(3, playlistsOwnerId)
+        return await self._search(
+            "searchAlbums",
+            (query, limit, offset),
+            Album,
+        )
 
-        return tracks
-
-    get_editors_pick = getEditorsPick
+    search_albums = searchAlbums

@@ -16,23 +16,9 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
-class GetMe:
-    from vkmusix.aio import asyncFunction
+from enum import Enum
 
-    @asyncFunction
-    async def getMe(self) -> dict:
-        """
-        Получает информацию о текущем пользователе.
-
-        Пример использования:\n
-        result = client.getMe()\n
-        print(result)
-
-        :return: словарь с информацией о текущем пользователе с гарантированными ключами: `id`, `first_name` и `last_name`.
-        """
-
-        me = await self._req("users.get")
-        if not self._me:
-            self._me = me
-
-        return me
+class Extension(Enum):
+    TS = "ts"
+    MP3 = "mp3"
+    OPUS = "opus"

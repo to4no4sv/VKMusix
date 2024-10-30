@@ -16,15 +16,15 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
-from .getMe import GetMe
-from .createVKccUrl import CreateVKccUrl
-from .apiReq import APIReq
-from ._getTracks import _GetTracks
+from .base import Base
 
-class Utils(
-    GetMe,
-    CreateVKccUrl,
-    APIReq,
-    _GetTracks,
-):
-    pass
+class SearchResults(Base):
+    from typing import Union, List
+
+    from vkmusix.types import Artist, Album, Track, Playlist
+
+    def __init__(self, artists: Union[List[Artist], None] = None, albums: Union[List[Album], None] = None, tracks: Union[List[Track], None] = None, playlists: Union[List[Playlist], None] = None) -> None:
+        self.artists = artists
+        self.albums = albums
+        self.tracks = tracks
+        self.playlists = playlists

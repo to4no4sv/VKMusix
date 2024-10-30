@@ -17,25 +17,32 @@
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
 class Reorder:
-    from vkmusix.aio import asyncFunction
+    from vkmusix.aio import async_
 
-    @asyncFunction
+    @async_
     async def reorder(self, trackId: int, beforeTrackId: int = None, afterTrackId: int = None) -> bool:
         """
-        Изменяет порядок аудиотрека в музыке пользователя. Должен быть заполнен один из параметров на выбор: `beforeTrackId` или `afterTrackId`.
+        Изменяет порядок трека в музыке пользователя. Должен быть заполнен один из параметров на выбор: ``beforeTrackId`` или ``afterTrackId``.
 
-        Пример использования для перемещения на место перед определённым треком:\n
-        result = client.reorder(trackId="yourTrackId", beforeTrackId="yourBeforeTrackId")\n
+        `Пример использования для перемещения на место перед определённым треком`:
+
+        result = client.reorder(
+            trackId=123471901,
+            beforeTrackId=123471901,
+        )
+
         print(result)
 
-        Пример использования для перемещения на место после определённого трека:\n
-        result = client.reorder(trackId="yourTrackId", afterTrackId="yourAfterTrackId")\n
+        `Пример использования для перемещения на место после определённого трека`:
+
+        result = client.reorder(
+            trackId=123471901,
+            afterTrackId=123471901,
+        )
+
         print(result)
 
-        :param trackId: идентификатор аудиотрека, порядок которого необходимо изменить. (int)
-        :param beforeTrackId: идентификатор аудиотрека перед которым необходимо поместить аудиотрек. (int, необязательно)
-        :param afterTrackId: идентификатор аудиотрека после которого необходимо поместить аудиотрек. (int, необязательно)
-        :return: `True`, если порядок трека успешно изменён, `False` в противном случае.
+        :return: ``True``.
         """
 
         if not any((beforeTrackId, afterTrackId)):
@@ -56,7 +63,7 @@ class Reorder:
                     {
                         "after": afterTrackId,
                     }
-                )
+                ),
             }
         )
 

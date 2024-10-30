@@ -17,27 +17,35 @@
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
 class Edit:
-    from typing import Union
+    from vkmusix.aio import async_
 
-    from vkmusix.aio import asyncFunction
-
-    @asyncFunction
-    async def edit(self, ownerId: int, trackId: int, title: Union[str, int] = None, artist: Union[str, int] = None, lyrics: Union[str, int] = None, genreId: int = None, removeFromSearchResults: bool = None) -> bool:
+    @async_
+    async def edit(self, ownerId: int, trackId: int, title: str = None, artist: str = None, lyrics: str = None, genreId: int = None, removeFromSearchResults: bool = None) -> bool:
         """
-        Изменяет информацию об аудиотреке.
+        Изменяет информацию о треке.
 
-        Пример использования:\n
-        result = client.edit(ownerId="yourOwnerId", trackId="yourTrackId", title="zapreti", artist="prombl", "lyrics"=str(), "genreId"=3, removeFromSearchResults=True)\n
+        `Пример использования`:
+
+        result = client.edit(
+            ownerId=-2001471901,
+            trackId=123471901,
+            filename="Маленький ярче — LARILARI",
+            title="LARILARI",
+            artist="Маленький ярче",
+            genreId=21,
+            removeFromSearchResults=True,
+        )
+
         print(result)
 
-        :param ownerId: идентификатор владельца аудиотрека (пользователь или группа). (int)
-        :param trackId: идентификатор аудиотрека, информацию которого необходимо изменить. (int)
-        :param title: новое название аудиотрека. (str, необязательно)
-        :param artist: новый(е) артист(ы) аудиотрека. (str, необязательно)
-        :param lyrics: новый текст аудиотрека. (str, необязательно)
-        :param genreId: новый жанр аудиотрека (в виде идентификатора). (int, необязательно)
-        :param removeFromSearchResults: флаг, указывающий, будет ли аудиотрек скрыт из поисковой выдачи. (bool, необязательно)
-        :return: `True`, если информация аудиотрека успешно обновлена, `False` в противном случае.
+        :param ownerId: идентификатор владельца трека. (``int``)
+        :param trackId: идентификатор трека. (``int``)
+        :param title: название трека. По умолчанию берётся из метаданных файла. (``str``, `optional`)
+        :param artist: артисты трека. По умолчанию берётся из метаданных файла. (``str``, `optional`)
+        :param lyrics: текст трека. (``str``, `optional`)
+        :param genreId: идентификатор жанра трека. (``int``, `optional`)
+        :param removeFromSearchResults: флаг, указывающий, необходимо ли исключить трек из поиска. По умолчанию ``False``. (``bool``, `optional`)
+        :return: `При успехе`: ``True``. `Если информацию о треке не удалось изменить`: ``False``.
         """
 
         if not any((title, artist, lyrics is not None, genreId is not None, removeFromSearchResults is not None)):

@@ -22,19 +22,19 @@ from .getPlaylistTracks import GetPlaylistTracks
 from .createPlaylist import CreatePlaylist
 from .addPlaylist import AddPlaylist
 from .removePlaylist import RemovePlaylist
-from ._editPlaylistPhoto import _EditPlaylistPhoto
 from .editPlaylist import EditPlaylist
 from .copyPlaylist import CopyPlaylist
+from ._editPlaylistPhoto import _EditPlaylistPhoto
 
 class Playlists(
     GetPlaylist,
     GetPlaylistTracks,
 
-    CreatePlaylist,
     AddPlaylist,
     RemovePlaylist,
-    _EditPlaylistPhoto,
+    CreatePlaylist,
     EditPlaylist,
     CopyPlaylist,
+    _EditPlaylistPhoto,
 ):
     pass

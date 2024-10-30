@@ -16,7 +16,7 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
-from vkmusix.types import Artist, Album, Track, Playlist
+from vkmusix.types import Artist, Album, Track, Playlist, SearchResults
 
 classes = {
     Artist: "artists",
@@ -26,9 +26,9 @@ classes = {
 }
 
 class _Search:
-    from typing import Union, List, Type
+    from typing import Union, Type
 
-    async def _search(self, method: str, params: tuple, itemClass: Union[List[Type[Union[Artist, Album, Track, Playlist]]], Type[Union[Artist, Album, Track, Playlist]]]) -> Union[List[Union[Artist, Album, Track, Playlist]], Artist, Album, Track, Playlist, None]:
+    async def _search(self, method: str, params: tuple, itemClass: Type[Union[Artist, Album, Track, Playlist]]) -> Union[SearchResults, None]:
         query, limit, offset = params[0], params[1], params[2]
         if not query:
             return self._raiseError("noneQuery")
@@ -38,7 +38,7 @@ class _Search:
             "count": limit,
             "offset": offset,
         }
-        
+
         response = await self._req(method, params)
 
         if not isinstance(response, dict):
@@ -56,7 +56,12 @@ class _Search:
 
                 results[model] = self._finalizeResponse(modelObjects, model)
 
-            return results if results else None
+            return SearchResults(
+                artists=results.get(Artist),
+                albums=results.get(Album),
+                tracks=results.get(Track),
+                playlists=results.get(Playlist),
+            ) if results else None
 
         else:
             items = response.get("items")

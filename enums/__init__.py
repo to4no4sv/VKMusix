@@ -18,3 +18,4 @@
 
 from .language import Language
 from .playlistType import PlaylistType
+from .extension import Extension

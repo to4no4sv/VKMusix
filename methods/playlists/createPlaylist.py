@@ -19,36 +19,37 @@
 class CreatePlaylist:
     from typing import Union
 
-    from vkmusix.aio import asyncFunction
+    from vkmusix.aio import async_
     from vkmusix.types import Playlist
 
-    @asyncFunction
-    async def createPlaylist(self, title: Union[str, int], description: Union[str, int] = None, photo: str = None, groupId: int = None, chatId: int = None) -> Union[Playlist, None]:
+    @async_
+    async def createPlaylist(self, title: str, description: str = None, photo: str = None, groupId: int = None, chatId: int = None) -> Union[Playlist, None]:
         """
         Создаёт плейлист в музыке пользователя или группы.
 
-        Пример использования:\n
-        result = client.createPlaylist(title="prombl — npc", description="Release Date: December 24, 2021", "photo"="yourPhotoFilename", "groupId"="yourGroupId", chatId="yourChatId")\n
-        print(result)
+        `Пример использования`:
 
-        :param title: название плейлиста. (str)
-        :param description: описание плейлиста. (str, необязательно)
-        :param photo: фото плейлиста. (str, необязательно, временно не работает)
-        :param groupId: идентификатор группы, в которой необходимо создать плейлист. (int, необязательно)
-        :param chatId: идентификатор чата, к которому небходимо привязать плейлист. (int, формат: `2000000000 + идентификатор чата`, необязательно)
-        :return: созданный плейлист в виде объекта модели `Playlist` с атрибутами `ownerId`, `playlistId`, `id`, `url` и `own`, если плейлист успешно создан, `None` в противном случае.
+        playlist = client.createPlaylist(
+            title="Лучшая музыка в машину!!!",
+        )
+
+        print(playlist)
+
+        :param title: название плейлиста. (``str``)
+        :param description: описание плейлиста. (``str``, `optional`)
+        :param photo: ссылка на фото плейлиста. Не работает. (``str``, `optional`)
+        :param groupId: идентификатор группы, в которой необходимо создать плейлист. (``int``, `optional`)
+        :param chatId: идентификатор чата, к которому необходимо привязать плейлист. (``int``, `optional`)
+        :return: `При успехе`: информация о созданном плейлисте (``types.Playlist``). `Если плейлист не удалось создать`: ``None``.
         """
 
         from vkmusix.types import Playlist
 
         if not groupId:
-            from vkmusix.utils import getSelfId
-
-            groupId = await getSelfId(self)
+            groupId = await self._getMyId()
 
         playlist = await self._req(
-            "createPlaylist"
-            if not chatId else "createChatPlaylist",
+            "createPlaylist" if not chatId else "createChatPlaylist",
             {
                 "title": title,
                 "description": description,
@@ -71,3 +72,5 @@ class CreatePlaylist:
             True,
             self,
         )
+
+    create_playlist = createPlaylist

@@ -114,9 +114,11 @@ class Download:
 
             if "{subtitle}" in filename and not track.subtitle:
                 filename = filename.replace("{subtitle}", str())
+                filename = filename.strip()
 
             if "{album}" in filename and not track.album:
                 filename = filename.replace("{album}", str())
+                filename = filename.strip()
 
             filename = filename.format(
                 artist=track.artist,
@@ -210,7 +212,7 @@ class Download:
                 inputContainer.close()
                 outputContainer.close()
 
-            except (av.InvalidDataError, av.ValueError):
+            except (av.InvalidDataError, av.ValueError, av.BlockingIOError):
                 return
 
             finally:
@@ -233,11 +235,11 @@ class Download:
                     audio.update(
                         {
                             **{
-                                "TIT2": TIT2(encoding=3, text=[track.fullTitle]),
-                                "TPE1": TPE1(encoding=3, text=[track.artist]),
+                                "TIT2": TIT2(encoding=1, text=[track.fullTitle]),
+                                "TPE1": TPE1(encoding=1, text=[track.artist]),
                             },
                             **({
-                                "TALB": TALB(encoding=3, text=[album.title]),
+                                "TALB": TALB(encoding=1, text=[album.title]),
                             } if album else dict()),
                         },
                     )
@@ -245,15 +247,14 @@ class Download:
                     if coverData:
                         audio.tags.add(
                             APIC(
-                                encoding=3,
+                                encoding=1,
                                 mime="image/jpeg",
                                 type=3,
-                                desc=u"Cover",
                                 data=coverData,
                             )
                         )
 
-                    audio.save()
+                    audio.save(v2_version=3)
 
                 elif extension == "opus":
                     from mutagen.oggopus import OggOpus

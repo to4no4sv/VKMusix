@@ -24,9 +24,6 @@ from .sessionAlreadyClosed import SessionAlreadyClosed
 from .sessionAlreadyOpened import SessionAlreadyOpened
 
 from .vkInvalidToken import VKInvalidToken
-from .vkCookieFileNotFound import VKCookieFileNotFound
-from .vkInvalidCookie import VKInvalidCookie
-from .vkUnsuccessfulLoginAttempt import VKUnsuccessfulLoginAttempt
 
 from .ruCaptchaInvalidKey import RuCaptchaInvalidKey
 from .ruCaptchaZeroBalance import RuCaptchaZeroBalance

@@ -40,8 +40,8 @@ class Edit:
 
         :param ownerId: идентификатор владельца трека. (``int``)
         :param trackId: идентификатор трека. (``int``)
-        :param title: название трека. По умолчанию берётся из метаданных файла. (``str``, `optional`)
-        :param artist: артисты трека. По умолчанию берётся из метаданных файла. (``str``, `optional`)
+        :param title: название трека. (``str``, `optional`)
+        :param artist: артисты трека. (``str``, `optional`)
         :param lyrics: текст трека. (``str``, `optional`)
         :param genreId: идентификатор жанра трека. (``int``, `optional`)
         :param removeFromSearchResults: флаг, указывающий, необходимо ли исключить трек из поиска. По умолчанию ``False``. (``bool``, `optional`)

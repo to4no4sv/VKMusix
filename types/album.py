@@ -20,7 +20,7 @@ from .base import Base
 
 class Album(Base):
     """
-    Класс, представляющий трек.
+    Класс, представляющий альбом.
 
     Атрибуты:
         title (str): название альбома.
@@ -270,9 +270,9 @@ class Album(Base):
 
         `Пример использования`:
 
-        playlist = playlist.copy()
+        album = album.copy()
 
-        print(playlist)
+        print(album)
 
         :param groupId: идентификатор группы, в которую необходимо скопировать альбом. (``int``, `optional`)
         :param chatId: идентификатор чата, к которому необходимо привязать скопированный альбом. (``int``, `optional`)

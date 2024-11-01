@@ -19,6 +19,8 @@
 import re
 import asyncio
 
+from json import JSONDecodeError
+
 import httpx
 
 retries = 5
@@ -69,7 +71,12 @@ class Client:
                 )
 
                 if responseType == "json":
-                    responseJson = response.json()
+                    try:
+                        responseJson = response.json()
+
+                    except JSONDecodeError:
+                        return
+
                     if "response" in responseJson:
                         responseJson = responseJson.get("response")
 

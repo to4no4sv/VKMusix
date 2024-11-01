@@ -19,6 +19,19 @@
 from .base import Base
 
 class SearchResults(Base):
+    """
+    Класс, представляющий результаты поиска.
+
+    Атрибуты:
+        artists (list[types.Artist], optional): найденные артисты.
+
+        albums (list[types.Album], optional): найденные альбомы.
+
+        tracks (list[types.Track], optional): найденные треки.
+
+        playlists (list[types.Playlist], optional): найденные плейлисты.
+    """
+
     from typing import Union, List
 
     from vkmusix.types import Artist, Album, Track, Playlist

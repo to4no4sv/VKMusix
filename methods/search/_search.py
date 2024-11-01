@@ -26,9 +26,9 @@ classes = {
 }
 
 class _Search:
-    from typing import Union, Type
+    from typing import Union, List, Type
 
-    async def _search(self, method: str, params: tuple, itemClass: Type[Union[Artist, Album, Track, Playlist]]) -> Union[SearchResults, None]:
+    async def _search(self, method: str, params: tuple, itemClass: Union[List[Type[Union[Artist, Album, Track, Playlist]]], Type[Union[Artist, Album, Track, Playlist]]]) -> Union[SearchResults, None]:
         query, limit, offset = params[0], params[1], params[2]
         if not query:
             return self._raiseError("noneQuery")

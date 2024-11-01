@@ -56,7 +56,7 @@ class AddPlaylist:
                     "playlist_id": playlistId,
                     **(
                         {
-                            "group_id": groupId
+                            "group_id": groupId,
                         }
                         if groupId else dict()
                     )

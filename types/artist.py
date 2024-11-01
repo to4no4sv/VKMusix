@@ -31,7 +31,7 @@ class Artist(Base):
 
         tracks (list[types.Track], optional): треки артиста. Доступны при получении через client.getArtist(includeTracks=True).
 
-        domain (str, optional): уникальное имя артиста, использующееся в ссылке.
+        domain (str, optional): уникальное имя артиста, использующееся в ссылке. Недоступно для Various Artists.
 
         id (int, optional): идентификатор артиста. Недоступен для Various Artists.
 

@@ -395,9 +395,6 @@ class Client(Methods):
             "sessionAlreadyOpened": SessionAlreadyOpened,
 
             "VKInvalidToken": VKInvalidToken,
-            "VKCookieFileNotFound": VKCookieFileNotFound,
-            "VKInvalidCookie": VKInvalidCookie,
-            "VKUnsuccessfulLoginAttempt": VKUnsuccessfulLoginAttempt,
 
             "RuCaptchaInvalidKey": RuCaptchaInvalidKey,
             "RuCaptchaZeroBalance": RuCaptchaZeroBalance,

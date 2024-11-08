@@ -32,7 +32,12 @@ class _ParseWebTracks:
         tracks = tracks.replace("\\/", "/").replace("false", "False").replace("true", "True").replace("null", "None")
 
         try:
-            tracks = eval(tracks[tracks.find('"list":[[') + 7: tracks.rfind("]]})") + 2])
+            tracks = tracks[tracks.find('"list":[[') + 7: tracks.rfind("]]})") + 2]
+
+            if not tracks:
+                return
+
+            tracks = eval(tracks)
 
         except SyntaxError:
             self._raiseError("accessDenied")

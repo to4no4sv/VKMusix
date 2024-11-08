@@ -9,7 +9,7 @@ full = True
 
 async def main() -> None:
     async with Client(
-            language=Language.Russian,
+        language=Language.Russian,
     ) as client:
         sections = await client.getSections(
             ownerId=ownerId,

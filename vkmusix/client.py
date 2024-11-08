@@ -264,15 +264,16 @@ class Client(Methods):
         )
 
         while True:
-            if response or not isinstance(response, dict):
+            if not response or not isinstance(response, dict):
                 break
 
             error = response.get("error")
-            errorCode = error.get("error_code")
-            errorMessage = error.get("error_msg")
 
             if not error:
                 break
+
+            errorCode = error.get("error_code")
+            errorMessage = error.get("error_msg")
 
             if errorCode == 3:
                 self._raiseError("invalidMethod")

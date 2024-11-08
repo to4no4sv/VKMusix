@@ -23,7 +23,7 @@ class Message(Base):
     Класс, представляющий сообщение с треками.
 
     Атрибуты:
-        tracks (list[types.Track]): треки сообщения.
+        tracks (list[types.Track]): треки из сообщения.
 
         date (datetime): дата и время отправки сообщения.
 

@@ -48,7 +48,7 @@ directory = os.path.join(
 
 async def main() -> None:
     async with Client(
-            language=Language.Russian,
+        language=Language.Russian,
     ) as client:
         tracks = await client.searchTracks(
             query=query,
@@ -67,7 +67,10 @@ async def main() -> None:
                     metadata=True,
                 )
 
-        tasks = [downloadWithSemaphore(track) for track in tracks]
+        tasks = [
+            downloadWithSemaphore(track)
+            for track in tracks
+        ]
         await asyncio.gather(*tasks)
 
 if __name__ == "__main__":

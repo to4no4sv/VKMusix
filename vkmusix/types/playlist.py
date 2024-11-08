@@ -269,7 +269,7 @@ class Playlist(Base):
 
 
     @async_
-    async def addTracks(self, ownerIds: Union[List[int], int], trackIds: Union[List[int], int]) -> List[bool]:
+    async def addTracks(self, ownerIds: Union[List[int], int], trackIds: Union[List[int], int]) -> Union[List[bool], bool]:
         """
         Добавляет треки в плейлист пользователя или группы.
 
@@ -284,7 +284,7 @@ class Playlist(Base):
 
         :param ownerIds: идентификаторы владельцев треков. (``Union[list[int], int]``)
         :param trackIds: идентификаторы треков. (``Union[list[int], int]``)
-        :return: Статусы добавления треков (``list[bool]``). `При успехе`: ``True``. `Если трек не удалось добавить`: ``False``.
+        :return: `Если треков несколько`: статусы добавления треков (``list[bool]``). `Если трек один`: статус добавления трека (``bool``). `При успехе`: ``True``. `Если трек не удалось добавить`: ``False``.
         """
 
         return await self._client.add(
@@ -298,7 +298,7 @@ class Playlist(Base):
 
 
     @async_
-    async def removeTracks(self, ownerIds: Union[List[int], int], trackIds: Union[List[int], int], validateIds: bool = True) -> List[bool]:
+    async def removeTracks(self, ownerIds: Union[List[int], int], trackIds: Union[List[int], int], validateIds: bool = True) -> Union[List[bool], bool]:
         """
         Удаляет треки из плейлиста пользователя или группы.
 
@@ -314,7 +314,7 @@ class Playlist(Base):
         :param ownerIds: идентификаторы владельцев треков. (``Union[list[int], int]``)
         :param trackIds: идентификаторы треков. (``Union[list[int], int]``)
         :param validateIds: флаг, указывающий, необходимо ли перепроверить треки на наличие в плейлисте. По умолчанию ``True``. Установите на ``False``, если вы получили треки через ``client.getPlaylistTracks()``. (``bool``, `optional`)
-        :return: Статусы удаления треков (``list[bool]``). `При успехе`: ``True``. `Если трек не удалось удалить`: ``False``.
+        :return: `Если треков несколько`: статусы удаления треков (``list[bool]``). `Если трек один`: статус удаления трека (``bool``). `При успехе`: ``True``. `Если трек не удалось удалить`: ``False``.
         """
 
         return await self._client.remove(

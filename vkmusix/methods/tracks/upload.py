@@ -103,10 +103,13 @@ class Upload:
             },
         )
 
-        if isinstance(track, dict) and track.get("error_code"):
+        if not track or (isinstance(track, dict) and track.get("error_code")):
             return track
 
-        track = self._finalizeResponse(track, Track)
+        track = self._finalizeResponse(
+            track,
+            Track,
+        )
 
         if any((lyrics, genreId, removeFromSearchResults)):
             await track.edit(lyrics=lyrics, genreId=genreId, removeFromSearchResults=removeFromSearchResults)

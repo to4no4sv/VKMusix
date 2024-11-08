@@ -41,8 +41,10 @@ from vkmusix.enums import Language
 
 query = "Маленький ярче"
 limit = 10
-directory = os.path.join(os.getcwd(), "tracks")
-
+directory = os.path.join(
+    os.getcwd(),
+    "tracks",
+)
 
 async def main() -> None:
     async with Client(
@@ -67,7 +69,6 @@ async def main() -> None:
 
         tasks = [downloadWithSemaphore(track) for track in tracks]
         await asyncio.gather(*tasks)
-
 
 if __name__ == "__main__":
     asyncio.run(main())

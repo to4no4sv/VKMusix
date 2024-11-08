@@ -1,0 +1,36 @@
+# Python bytecode files
+*.pyc
+*.pyo
+__pycache__/
+
+# Virtual environments
+venv/
+env/
+.venv/
+.env/
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+
+# Logs and temporary files
+*.log
+*.bak
+*.swp
+
+# Build directories
+build/
+dist/
+*.egg-info/
+
+# Testing tools
+.tox/
+.nox/
+.coverage
+.hypothesis/
+.pytest_cache/
+
+# OS-specific files
+.DS_Store
+Thumbs.db

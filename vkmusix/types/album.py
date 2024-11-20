@@ -200,7 +200,7 @@ class Album(Base):
 
 
     @async_
-    async def getTracks(self) -> Union[List[Track], None]:
+    async def getTracks(self, isLarge: bool = False) -> Union[List[Track], None]:
         """
         Получает треки альбома.
 
@@ -210,12 +210,14 @@ class Album(Base):
 
         print(tracks)
 
+        :param isLarge: флаг, указывающий, содержит ли альбом более 1000 треков. По умолчанию ``False``. Если ``True``, будет получена ограниченная информация о всех треках, если ``False`` — только последние 1000 треков, но с полной информацией. Установите ``None``, чтобы библиотека определила автоматически. (``bool``, `optional`)
         :return: `При успехе`: треки альбома (``list[types.Track]``). `Если альбом не найден`: ``None``.
         """
 
         return await self._client.getPlaylistTracks(
             self.albumId or self.playlistId,
             self.ownerId,
+            isLarge,
         )
 
     get_tracks = getTracks

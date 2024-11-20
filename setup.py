@@ -4,7 +4,7 @@ from vkmusix import __version__
 setup(
     name="vkmusix",
     version=__version__,
-    description="Библиотека для взаимодействия с VK Music. Документация: https://to4no4sv.gitbook.io/vkmusix.",
+    description="Библиотека для работы с VK Music. Документация: https://to4no4sv.gitbook.io/vkmusix.",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     author="thswq",
@@ -12,7 +12,6 @@ setup(
     url="https://github.com/to4no4sv/vkmusix",
     packages=find_packages(),
     install_requires=[
-        "pytz == 2024.1",
         "httpx == 0.27.0",
         "aiofiles == 24.1.0",
         "pycryptodome == 3.20.0",

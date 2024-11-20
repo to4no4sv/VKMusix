@@ -19,7 +19,7 @@
 from .getMe import GetMe
 from .api import Api
 
-class Other(
+class Misc(
     GetMe,
     Api,
 ):

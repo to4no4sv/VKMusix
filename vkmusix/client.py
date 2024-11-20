@@ -39,7 +39,7 @@ class Client(Methods):
         token (str, optional): Токен доступа к ВКонтакте API с правами на аудио.\n
         RuCaptchaKey (str, optional): Ключ доступа к RuCaptcha API для автоматического решения капч через этот сервис. Если не указан, капча потребует ручного решения.\n
         language (enums.Language, optional): Язык ошибок (например, Language.Russian для русского, Language.English для английского). Если не указан, используются все языки.\n
-        proxies (dict, optional): Прокси, которые будут использоваться при запросах. Формат: {"http": "IP:port"} или {"socks5": "login:password@IP:port"}.\n
+        proxy (dict, optional): Прокси, которые будут использоваться при запросах. Формат: {"http": "IP:port"} или {"socks5": "login:password@IP:port"}.\n
 
     Создания экземпляра:
         from vkmusix import Client
@@ -49,7 +49,7 @@ class Client(Methods):
             token="...",
             RuCaptchaKey="...",
             language=Language.Russian or Language.English,
-            proxies={
+            proxy={
                 "http": "IP:port",
                 "socks5": "login:password@IP:port",
             },
@@ -61,7 +61,7 @@ class Client(Methods):
             token="...",
             RuCaptchaKey="...",
             language=Language.Russian or Language.English,
-            proxies={
+            proxy={
                 "http": "IP:port",
                 "socks5": "login:password@IP:port",
             },
@@ -70,7 +70,9 @@ class Client(Methods):
     """
 
 
-    def __init__(self, token: str = None, RuCaptchaKey: str = None, language: Language = None, proxies: dict = None) -> None:
+    def __init__(self, token: str = None, RuCaptchaKey: str = None, language: Language = None, proxy: dict = None) -> None:
+        self._language = language if language and isinstance(language, Language) else None
+
         import sys
         if sys.version_info < (3, 6):
             ruWarning = "Внимание: Работоспособость этой библиотеки гарантируется только при Python 3.6 или выше. Вы используете версию {}."
@@ -78,7 +80,13 @@ class Client(Methods):
 
             from warnings import warn
             warn(
-                (ruWarning if self._language == Language.Russian else (enWarning if self._language == Language.English else "🇷🇺: " + ruWarning + " 🇬🇧: " + enWarning)).format(str(sys.version_info.major) + "." + str(sys.version_info.minor)),
+                (
+                    ruWarning if self._language == enums.Language.Russian
+                    else (
+                        enWarning if self._language == enums.Language.English
+                        else "🇷🇺: " + ruWarning + " 🇬🇧: " + enWarning
+                    )
+                ).format(str(sys.version_info.major) + "." + str(sys.version_info.minor)),
                 UserWarning,
             )
 
@@ -86,28 +94,27 @@ class Client(Methods):
             token = input("Получите токен ВКонтакте с правами на аудиозаписи и доступ в любое время на сайте `https://vkhost.github.io/` (приложение VK Admin) и отправьте его: ")
 
         self._RuCaptchaKey = RuCaptchaKey
-        self._language = language if language and isinstance(language, Language) else None
 
-        if not proxies:
-            self._proxies = None
+        if not proxy:
+            self._proxy = None
 
         else:
-            if not isinstance(proxies, dict):
-                self._raiseError("proxyShouldBeDict")
+            if not isinstance(proxy, dict):
+                self._raiseError("invalidProxyType")
 
-            newProxies = dict()
+            newProxy = dict()
 
-            for scheme in proxies.keys():
+            for scheme in proxy.keys():
                 if scheme.lower() not in ("http", "https", "socks4", "socks5"):
                     self._raiseError("invalidProxyDict")
 
-                proxyURL = proxies.get(scheme)
+                proxyURL = proxy.get(scheme)
                 scheme = scheme.lower() + ("://" if not scheme.endswith("://") else str())
-                newProxies[scheme] = (scheme if "://" not in proxyURL else str()) + proxyURL
+                newProxy[scheme] = (scheme if "://" not in proxyURL else str()) + proxyURL
 
-            self._proxies = newProxies
+            self._proxy = newProxy
 
-        self._session = httpx.AsyncClient(proxies=self._proxies)
+        self._session = httpx.AsyncClient(proxies=self._proxy)
         self._client = WebClient(self._session)
 
         self._params = {
@@ -207,7 +214,7 @@ class Client(Methods):
             return
 
         self._closed = False
-        self._session = httpx.AsyncClient(proxies=self._proxies)
+        self._session = httpx.AsyncClient(proxies=self._proxy)
         self._client = WebClient(self._session)
 
 
@@ -454,7 +461,7 @@ class Client(Methods):
 
 
     def _finalizeResponse(self, response: Union[List[dict], dict], objectType: Type[any]) -> Union[List[any], None]:
-        if not response or response is False:
+        if not response or isinstance(response, bool):
             return
 
         wasList = True

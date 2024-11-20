@@ -135,9 +135,24 @@ class Download:
         iv = bytes.fromhex("00000000000000000000000000000000")
         tasks = list()
 
-        m3u8Content = await self._client.req(track.fileUrl, responseType="response")
+        while True:
+            m3u8Content = await self._client.req(
+                track.fileUrl,
+                responseType="response",
+            )
+
+            if m3u8Content:
+                break
+
         while m3u8Content.status_code in (301, 302):
-            m3u8Content = await self._client.req(m3u8Content.headers.get("Location"), responseType="response")
+            while True:
+                m3u8Content = await self._client.req(
+                    m3u8Content.headers.get("Location"),
+                    responseType="response",
+                )
+
+                if m3u8Content:
+                    break
 
         if m3u8Content.status_code != 200:
             return

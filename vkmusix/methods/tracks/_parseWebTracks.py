@@ -71,6 +71,7 @@ class _ParseWebTracks:
                         "owner_id": album[0],
                         "album_id": album[1],
                     } if album else None,
+                    "part_number": track[-6],
                     "release_audio_id": track[-2],
                 },
                 Track,

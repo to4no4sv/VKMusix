@@ -22,7 +22,7 @@ from .tracks import Tracks
 from .playlists import Playlists
 from .owners import Owners
 from .curators import Curators
-from .other import Other
+from .misc import Misc
 
 class Methods(
     Search,
@@ -31,6 +31,6 @@ class Methods(
     Playlists,
     Owners,
     Curators,
-    Other,
+    Misc,
 ):
     pass

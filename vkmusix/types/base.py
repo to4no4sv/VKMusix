@@ -33,11 +33,9 @@ class Encoder(JSONEncoder):
 
         return super().default(o)
 
-
 class Base:
     def __init__(self, client: "Client") -> None:
         self._client = client
-
 
     def _toDict(self) -> dict:
         from types import FunctionType, MethodType
@@ -50,7 +48,6 @@ class Base:
             result[key if not key.startswith("_") else key[1:]] = value
 
         return result
-
 
     def __repr__(self) -> str:
         from json import dumps

@@ -49,6 +49,8 @@ class Track(Base):
 
         album (types.Album, optional): альбом, на котором присутствует этот трек. В некоторых случаях может быть доступно и не для оффициально загруженных треков.
 
+        partNumber (int, optional): ???.
+
         explicit (bool, optional): флаг, указывающий, есть ли в треке ненормативная лексика. Доступно только для оффициально загруженных треков.
 
         licensed (bool, optional): флаг, указывающий, ???
@@ -128,7 +130,9 @@ class Track(Base):
             Album,
         )
 
-        self.explicit = track.get("is_excplicit")
+        self.partNumber = track.get("part_number")
+
+        self.explicit = track.get("is_explicit")
 
         self.licensed = track.get("is_licensed")
         self.focus = track.get("is_focus_track")

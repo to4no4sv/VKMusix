@@ -1,4 +1,4 @@
-# VKMusix [![PyPI version](https://d25lcipzij17d.cloudfront.net/badge.svg?id=py&r=r&ts=1683906897&type=6e&v=4.3.2&x2=0)](https://pypi.org/project/vkmusix)
+# VKMusix [![PyPI version](https://d25lcipzij17d.cloudfront.net/badge.svg?id=py&r=r&ts=1683906897&type=6e&v=4.3.3&x2=0)](https://pypi.org/project/vkmusix)
 
 ## Установка и обновление
 ```bash
@@ -14,7 +14,6 @@ client = Client()
 tracks = client.searchTracks(
     query="Маленький ярче",
     limit=10,
-    
 )
 
 print(tracks)

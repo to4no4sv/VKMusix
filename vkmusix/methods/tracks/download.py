@@ -303,6 +303,6 @@ class Download:
                         encodedPicture = base64.b64encode(picture.write()).decode("ascii")
                         audio["metadata_block_picture"] = [encodedPicture]
 
-                audio.save(v2_version=3)
+                audio.save()
 
         return f"{filename}.{extension}"

@@ -16,40 +16,67 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
-from json import JSONEncoder
+from types import FunctionType, MethodType
+import json
 
-class Encoder(JSONEncoder):
+class Encoder(json.JSONEncoder):
     def default(self, o) -> any:
         from datetime import datetime
 
-        if any((class_.__name__ == "Base" for class_ in o.__class__.__bases__)):
+        if any((class_.__name__ == 'Base' for class_ in o.__class__.__bases__)):
             return o._toDict()
 
         elif isinstance(o, datetime):
-            return o.strftime("%d/%m/%Y %H:%M:%S")
+            return o.strftime('%d/%m/%Y %H:%M:%S')
 
         elif isinstance(o, type):
             return o.__name__
 
-        return super().default(o)
+        try:
+            return super().default(o)
+
+        except TypeError:
+            return repr(o)
 
 class Base:
-    def __init__(self, client: "Client") -> None:
+    def __init__(self, client: 'vkmusix.Client') -> None:
         self._client = client
 
-    def _toDict(self) -> dict:
-        from types import FunctionType, MethodType
+    def __eq__(self, other: 'Base') -> bool:
+        if not any((class_.__name__ == 'Base' for class_ in other.__class__.__bases__)):
+            return False
 
-        result = dict()
-        for key, value in self.__dict__.items():
-            if any((value is None, all((key == "fullTitle", not getattr(self, "subtitle", None))), isinstance(value, (FunctionType, MethodType)), key in ["_client", "raw"])):
+        for key in self.__slots__:
+            if key == 'raw':
                 continue
 
-            result[key if not key.startswith("_") else key[1:]] = value
+            value = getattr(self, key, None)
+            value2 = getattr(other, key, None)
+
+            if value != value2:
+                return False
+
+        return True
+
+    def _toDict(self) -> dict:
+        result = dict()
+        for key in self.__slots__:
+            value = getattr(self, key, None)
+
+            if (
+                value is None or
+                (
+                    key == 'fullTitle' and
+                    not getattr(self, 'subtitle', None)
+                ) or
+                isinstance(value, (FunctionType, MethodType)) or
+                key in ('_client', 'raw')
+            ):
+                continue
+
+            result[key if not key.startswith('_') else key[1:]] = value
 
         return result
 
     def __repr__(self) -> str:
-        from json import dumps
-
-        return dumps(self._toDict(), indent=4, ensure_ascii=False, cls=Encoder)
+        return json.dumps(self._toDict(), indent=4, ensure_ascii=False, cls=Encoder)

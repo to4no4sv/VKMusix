@@ -40,6 +40,17 @@ class Artist(Base):
         raw (dict): необработанные данные, полученные от ВКонтакте.
     """
 
+    __slots__ = (
+        'nickname',
+        'photo',
+        'albums',
+        'tracks',
+        'domain',
+        'id',
+        'url',
+        'raw',
+    )
+
     from typing import Union, List
 
     from vkmusix.aio import async_

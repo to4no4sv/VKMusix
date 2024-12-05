@@ -16,31 +16,32 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
-from json import JSONEncoder
+import json
 
-class Encoder(JSONEncoder):
+class Encoder(json.JSONEncoder):
     def default(self, o) -> any:
         from datetime import datetime
 
-        if any((class_.__name__ == "Base" for class_ in o.__class__.__bases__)):
+        if any((class_.__name__ == 'Base' for class_ in o.__class__.__bases__)):
             return o._toDict()
 
         elif isinstance(o, datetime):
-            return o.strftime("%d/%m/%Y %H:%M:%S")
+            return o.strftime('%d/%m/%Y %H:%M:%S')
 
         elif isinstance(o, type):
             return o.__name__
 
-        return super().default(o)
+        try:
+            return super().default(o)
 
+        except TypeError:
+            return repr(o)
 
 class Base:
     def __repr__(self) -> str:
         if len(self.__dict__) == 1:
             return list(self.__dict__.values())[0]
 
-        from json import dumps
-
-        return dumps(self.__dict__, indent=4, ensure_ascii=False, cls=Encoder)
+        return json.dumps(self.__dict__, indent=4, ensure_ascii=False, cls=Encoder)
 
     __str__ = __repr__

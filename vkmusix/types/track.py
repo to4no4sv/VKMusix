@@ -74,6 +74,34 @@ class Track(Base):
         raw (dict): необработанные данные, полученные от ВКонтакте.
     """
 
+    __slots__ = (
+        'title',
+        'subtitle',
+        'fullTitle',
+        'artist',
+        'artists',
+        'featuredArtists',
+        'duration',
+        'genre',
+        'lyrics',
+        'hasLyrics',
+        'uploadedAt',
+        'fileUrl',
+        'album',
+        'partNumber',
+        'explicit',
+        'licensed',
+        'focus',
+        'shortsAllowed',
+        'storiesAllowed',
+        'releaseTrack',
+        'ownerId',
+        'trackId',
+        'id',
+        'url',
+        'raw',
+    )
+
     from typing import Union, List
 
     from vkmusix.aio import async_

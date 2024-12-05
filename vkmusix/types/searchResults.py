@@ -32,6 +32,13 @@ class SearchResults(Base):
         playlists (list[types.Playlist], optional): найденные плейлисты.
     """
 
+    __slots__ = (
+        'artists',
+        'albums',
+        'tracks',
+        'playlists',
+    )
+
     from typing import Union, List
 
     from vkmusix.types import Artist, Album, Track, Playlist

@@ -55,6 +55,7 @@ class Upload:
         import os.path
         import aiofiles
 
+        from vkmusix import web
         from vkmusix.types import Track
         from vkmusix.utils import checkFile
 
@@ -76,7 +77,7 @@ class Upload:
         async with aiofiles.open(filename, "rb") as file:
             fileContent = await file.read()
 
-        uploadingFileResponse = await self._client.req(
+        uploadingFileResponse = await self._client(
             uploadUrl,
             files={
                 "file": (
@@ -85,7 +86,7 @@ class Upload:
                     "audio/mpeg",
                 ),
             },
-            method="POST",
+            method=web.Method.POST,
         )
 
         server = uploadingFileResponse.get("server")

@@ -30,6 +30,12 @@ class MusicFromPost(Base):
         playlists (list[types.Playlist], optional): плейлисты из поста.
     """
 
+    __slots__ = (
+        'albums',
+        'tracks',
+        'playlists',
+    )
+
     from typing import Union, List
 
     from vkmusix.types import Album, Track, Playlist

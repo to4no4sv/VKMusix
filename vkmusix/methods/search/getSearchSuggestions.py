@@ -16,42 +16,38 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
-class GetSearchTrends:
+class GetSearchSuggestions:
     from typing import Union, List
 
     from vkmusix.aio import async_
 
     @async_
-    async def getSearchTrends(self, limit: int = None, offset: int = None) -> Union[List[str], None]:
+    async def getSearchSuggestions(self, query: str, limit: int = None) -> Union[List[str], None]:
         """
         Получает популярные поисковые запросы.
 
         `Пример использования`:
 
-        searchTrends = client.getSearchTrends(
+        searchSuggestions = client.getSearchSuggestions(
+            query='Маленький ярче',
             limit=10,
         )
 
-        print(searchTrends)
+        print(searchSuggestions)
 
-        :param limit: лимит поисковых запросов. (``int``, `optional`)
-        :param offset: сколько поисковых запросов пропустить. (``int``, `optional`)
-        :return: `При успехе`: поисковые запросы (``list[str]``). `Если поисковые запросы отсутствуют`: ``None``.
+        :param query: поисковой запрос. (``str``)
+        :param limit: лимит поисковых подсказок. (``int``, `optional`)
+        :return: `При успехе`: поисковые подсказки (``list[str]``). `Если поисковые подсказки отсутствуют`: ``None``.
         """
 
-        searchTrends = await self._req(
-            "getSearchTrends",
+        searchSuggestions = (await self._req(
+            'getSearchSuggestions',
             {
-                "count": limit,
-                "offset": offset,
+                'query': query,
+                'count': limit,
             },
-        )
+        )).get('suggestions')
 
-        searchTrends = [
-            item.get("name")
-            for item in searchTrends.get("items")
-        ]
+        return searchSuggestions if searchSuggestions else None
 
-        return searchTrends if searchTrends else None
-
-    get_search_trends = getSearchTrends
+    get_search_suggestions = getSearchSuggestions

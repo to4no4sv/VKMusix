@@ -24,6 +24,7 @@ from .searchPlaylists import SearchPlaylists
 from ._search import _Search
 
 from .getSearchTrends import GetSearchTrends
+from .getSearchSuggestions import GetSearchSuggestions
 
 class Search(
     Search,
@@ -34,5 +35,6 @@ class Search(
     _Search,
 
     GetSearchTrends,
+    GetSearchSuggestions,
 ):
     pass

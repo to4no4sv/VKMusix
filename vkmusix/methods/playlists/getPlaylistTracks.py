@@ -42,6 +42,7 @@ class GetPlaylistTracks:
         :return: `При успехе`: треки плейлиста или альбома (``list[types.Track]``). `Если плейлист или альбом не найден или треки отсутствуют`: ``None``.
         """
 
+        from vkmusix import web
         from vkmusix.config import VK, headers
 
         if not ownerId:
@@ -59,10 +60,10 @@ class GetPlaylistTracks:
             isLarge = playlist.trackCount and playlist.trackCount > 1000
 
         if not isLarge:
-            tracks = await self._client.req(
+            tracks = await self._client(
                 f"{VK}music/playlist/{ownerId}_{playlistId}",
                 headers=headers,
-                responseType="response",
+                responseType=web.ResponseType.RESPONSE,
             )
 
             statusCode = tracks.status_code
@@ -71,10 +72,10 @@ class GetPlaylistTracks:
                 return
 
             while statusCode == 302:
-                tracks = await self._client.req(
+                tracks = await self._client(
                     f'{VK}{tracks.headers.get("Location")}',
                     headers=headers,
-                    responseType="response",
+                    responseType=web.ResponseType.RESPONSE,
                 )
                 statusCode = tracks.status_code
 

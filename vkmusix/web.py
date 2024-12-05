@@ -16,35 +16,53 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
-import re
+from typing import Union
 import asyncio
-
-from json import JSONDecodeError
+import re
+import json as jsonlib
+from enum import Enum
 
 import httpx
+
+from vkmusix import aio
 
 retries = 5
 timeout = 20
 sleepTime = .25
 
 def addHTTPsToUrl(url: str) -> str:
-    if not ("https://" in url or "http://" in url):
-        url = "https://" + url
+    if not ('https://' in url or 'http://' in url):
+        url = 'https://' + url
 
     return url
 
+class ResponseType(Enum):
+    JSON = 'JSON'
+    CODE = 'CODE'
+    FILE = 'FILE'
+    RESPONSE = 'RESPONSE'
+
+class Method(Enum):
+    GET = 'GET'
+    POST = 'POST'
+
 class Client:
-    from typing import Union
-
-    from vkmusix.aio import async_
-
     def __init__(self, client: httpx.AsyncClient = None) -> None:
         self.client = client or httpx.AsyncClient()
 
-
-    @async_
-    async def request(self, url: str, params: dict = None, json: dict = None, data: Union[str, dict] = None, cookies: dict = None, headers: dict = None, files: dict = None, responseType: str = "json", method: str = "GET") -> any:
-        responseType = responseType.lower()
+    @aio.async_
+    async def __call__(
+        self,
+        url: str,
+        params: dict = None,
+        json: dict = None,
+        data: Union[str, dict] = None,
+        cookies: dict = None,
+        headers: dict = None,
+        files: dict = None,
+        responseType: ResponseType = ResponseType.JSON,
+        method: Method = Method.GET,
+    ) -> any:
         retriesLocal = retries
 
         url = addHTTPsToUrl(url)
@@ -52,13 +70,13 @@ class Client:
         if cookies and isinstance(cookies, list):
             cookies_ = dict()
             for index, cookie in enumerate(cookies):
-                cookies_[cookie.get("name")] = cookie.get("value")
+                cookies_[cookie.get('name')] = cookie.get('value')
             cookies = cookies_
 
         while retriesLocal > 0:
             try:
                 response = await self.client.request(
-                    method,
+                    method.value,
                     url,
                     params=params,
                     json=json,
@@ -70,26 +88,26 @@ class Client:
                     follow_redirects=False,
                 )
 
-                if responseType == "json":
+                if responseType == ResponseType.JSON:
                     try:
                         responseJson = response.json()
 
-                    except JSONDecodeError:
+                    except jsonlib.JSONDecodeError:
                         return
 
-                    if "response" in responseJson:
-                        responseJson = responseJson.get("response")
+                    if 'response' in responseJson:
+                        responseJson = responseJson.get('response')
 
                     return responseJson
 
-                elif responseType == "code":
+                elif responseType == ResponseType.CODE:
                     responseText = response.text
                     return re.sub(r"<br/>", "\n", responseText)
 
-                elif responseType == "file":
+                elif responseType == ResponseType.FILE:
                     return response.content
 
-                elif responseType == "response":
+                elif responseType == ResponseType.RESPONSE:
                     return response
 
             except (httpx.TimeoutException, httpx.ConnectError, httpx.RequestError, httpx.ReadError):
@@ -99,5 +117,3 @@ class Client:
             except asyncio.TimeoutError:
                 retriesLocal -= 1
                 await asyncio.sleep(sleepTime)
-
-    req = request

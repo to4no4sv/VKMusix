@@ -16,22 +16,15 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with VKMusix. If not, see <http://www.gnu.org/licenses/>.
 
+from typing import Union, List, Type
 import asyncio
-import httpx
 import base64
 
-from typing import Union, List, Type
+import httpx
 
-from vkmusix.aio import async_
-from vkmusix.config import VKAPI, VKAPIVersion, RuCaptchaAPI
-from vkmusix.errors import *
+from vkmusix import config, enums, errors, methods, web, aio
 
-from vkmusix.webClient import Client as WebClient
-
-from vkmusix.methods import Methods
-from vkmusix.enums import Language
-
-class Client(Methods):
+class Client(methods.Methods):
     """
     Класс, который вы будете использовать для каждого взаимодействия с VK Music.
 
@@ -70,8 +63,8 @@ class Client(Methods):
     """
 
 
-    def __init__(self, token: str = None, RuCaptchaKey: str = None, language: Language = None, proxy: dict = None) -> None:
-        self._language = language if language and isinstance(language, Language) else None
+    def __init__(self, token: str = None, RuCaptchaKey: str = None, language: enums.Language = None, proxy: dict = None) -> None:
+        self._language = language if language and isinstance(language, enums.Language) else None
 
         import sys
         if sys.version_info < (3, 6):
@@ -115,11 +108,11 @@ class Client(Methods):
             self._proxy = newProxy
 
         self._session = httpx.AsyncClient(proxies=self._proxy)
-        self._client = WebClient(self._session)
+        self._client = web.Client(self._session)
 
         self._params = {
             "access_token": token,
-            "v": VKAPIVersion,
+            "v": config.VKAPIVersion,
         }
         self._closed = False
         self._me = None
@@ -131,7 +124,7 @@ class Client(Methods):
             from .version import __version__
             from packaging import version
 
-            latestVersion = self._client.req("https://pypi.org/pypi/vkmusix/json").get("info").get("version")
+            latestVersion = self._client("https://pypi.org/pypi/vkmusix/json").get("info").get("version")
 
             if version.parse(latestVersion) > version.parse(__version__):
                 ruWarning = f"Внимание: Доступна новая версия библиотеки {latestVersion} (https://pypi.org/project/vkmusix). Вы используете версию {__version__}."
@@ -139,12 +132,16 @@ class Client(Methods):
 
                 from warnings import warn
                 warn(
-                    ruWarning if self._language == Language.Russian else (enWarning if self._language == Language.English else "🇷🇺: " + ruWarning + " 🇬🇧: " + enWarning),
+                    ruWarning if self._language == enums.Language.Russian
+                    else (
+                        enWarning if self._language == enums.Language.English
+                        else "🇷🇺: " + ruWarning + " 🇬🇧: " + enWarning
+                    ),
                     UserWarning,
                 )
 
 
-    @async_
+    @aio.async_
     async def checkUpdates(self) -> None:
         if self._closed:
             self._raiseError("sessionClosed")
@@ -152,7 +149,7 @@ class Client(Methods):
         from .version import __version__
         from packaging import version
 
-        latestVersion = (await self._client.req("https://pypi.org/pypi/vkmusix/json")).get("info").get("version")
+        latestVersion = (await self._client("https://pypi.org/pypi/vkmusix/json")).get("info").get("version")
 
         if version.parse(latestVersion) > version.parse(__version__):
             ruWarning = f"Внимание: Доступна новая версия библиотеки {latestVersion} (https://pypi.org/project/vkmusix). Вы используете версию {__version__}."
@@ -160,7 +157,11 @@ class Client(Methods):
 
             from warnings import warn
             warn(
-                ruWarning if self._language == Language.Russian else (enWarning if self._language == Language.English else "🇷🇺: " + ruWarning + " 🇬🇧: " + enWarning),
+                ruWarning if self._language == enums.Language.Russian
+                else (
+                    enWarning if self._language == enums.Language.English
+                    else "🇷🇺: " + ruWarning + " 🇬🇧: " + enWarning
+                ),
                 UserWarning,
             )
 
@@ -177,7 +178,7 @@ class Client(Methods):
         try:
             self.close()
 
-        except SessionAlreadyClosed:
+        except errors.SessionAlreadyClosed:
             pass
 
 
@@ -185,11 +186,11 @@ class Client(Methods):
         try:
             await self.close()
 
-        except SessionAlreadyClosed:
+        except errors.SessionAlreadyClosed:
             pass
 
 
-    @async_
+    @aio.async_
     async def close(self) -> None:
         """
         Закрывает текующую сессию. Для отправки новых запросов потребуется создать новый объект класса `Client` или использовать метод `client.reconnect()`.
@@ -203,7 +204,7 @@ class Client(Methods):
         await self._session.aclose()
 
 
-    @async_
+    @aio.async_
     async def reconnect(self) -> None:
         """
         Пересоздаёт закрытую сессию.
@@ -215,10 +216,10 @@ class Client(Methods):
 
         self._closed = False
         self._session = httpx.AsyncClient(proxies=self._proxy)
-        self._client = WebClient(self._session)
+        self._client = web.Client(self._session)
 
 
-    @async_
+    @aio.async_
     async def _getMyId(self) -> int:
         if not self._me:
             self._me = await self.getMe()
@@ -226,7 +227,7 @@ class Client(Methods):
         return self._me.get("id")
 
 
-    @async_
+    @aio.async_
     async def _req(self, method: str, params: dict = None, json: dict = None, data: any = None, cookies: dict = None, headers: dict = None, files: dict = None, version: float = None, httpMethod: str = None) -> Union[dict, None]:
         if self._closed:
             self._raiseError("sessionClosed")
@@ -253,13 +254,13 @@ class Client(Methods):
         if "." not in method:
             method = f"audio.{method}"
 
-        url = f"{VKAPI}{method}"
+        url = f"{config.VKAPI}{method}"
         fullParams = {**params, **self._params}
 
         if version:
             fullParams["v"] = version
 
-        response = await self._client.req(
+        response = await self._client(
             url,
             fullParams,
             json,
@@ -267,7 +268,7 @@ class Client(Methods):
             cookies,
             headers,
             files,
-            method=httpMethod.upper() if httpMethod and isinstance(httpMethod, str) else "GET",
+            method=httpMethod.upper() if httpMethod and isinstance(httpMethod, web.Method) else web.Method.GET,
         )
 
         while True:
@@ -309,7 +310,7 @@ class Client(Methods):
                     }
                 )
 
-                response = await self._client.req(url, fullParams)
+                response = await self._client(url, fullParams)
 
             elif errorCode in [15, 201, 203]:
                 if ": can not restore too late" in errorMessage:
@@ -342,9 +343,9 @@ class Client(Methods):
         return response
 
 
-    @async_
+    @aio.async_
     async def _solveCaptcha(self, captchaUrl: str) -> str:
-        imageBytes = await self._client.req(captchaUrl, responseType="file")
+        imageBytes = await self._client(captchaUrl, responseType=web.ResponseType.FILE)
         captchaImageInBase64 = base64.b64encode(imageBytes).decode("utf-8")
 
         RuCaptchaParams = {
@@ -356,21 +357,21 @@ class Client(Methods):
             "languagePool": "rn",
         }
 
-        taskId = (await self._client.req(
-            f"{RuCaptchaAPI}createTask",
+        taskId = (await self._client(
+            f"{config.RuCaptchaAPI}createTask",
             json=RuCaptchaParams,
-            method="POST",
+            method=web.Method.POST,
         )).get("taskId")
 
         while True:
             await asyncio.sleep(5)
-            taskResult = await self._client.req(
-                f"{RuCaptchaAPI}getTaskResult",
+            taskResult = await self._client(
+                f"{config.RuCaptchaAPI}getTaskResult",
                 json={
                     "clientKey": self._RuCaptchaKey,
                     "taskId": taskId,
                 },
-                method="POST",
+                method=web.Method.POST,
             )
             errorId = taskResult.get("errorId")
 
@@ -384,10 +385,10 @@ class Client(Methods):
                 self._raiseError("RuCaptchaZeroBalance")
 
             elif errorId == 12:
-                taskId = (await self._client.req(
-                    f"{RuCaptchaAPI}createTask",
+                taskId = (await self._client(
+                    f"{config.RuCaptchaAPI}createTask",
                     json=RuCaptchaParams,
-                    method="POST",
+                    method=web.Method.POST,
                 )).get("taskId")
 
             elif errorId == 21:
@@ -402,43 +403,43 @@ class Client(Methods):
             return
 
         errorsDict = {
-            "unknown": Unknown,
+            "unknown": errors.Unknown,
 
-            "sessionClosed": SessionClosed,
-            "sessionAlreadyClosed": SessionAlreadyClosed,
-            "sessionAlreadyOpened": SessionAlreadyOpened,
+            "sessionClosed": errors.SessionClosed,
+            "sessionAlreadyClosed": errors.SessionAlreadyClosed,
+            "sessionAlreadyOpened": errors.SessionAlreadyOpened,
 
-            "VKInvalidToken": VKInvalidToken,
+            "VKInvalidToken": errors.VKInvalidToken,
 
-            "RuCaptchaInvalidKey": RuCaptchaInvalidKey,
-            "RuCaptchaZeroBalance": RuCaptchaZeroBalance,
-            "RuCaptchaBannedIP": RuCaptchaBannedIP,
-            "RuCaptchaBannedAccount": RuCaptchaBannedAccount,
+            "RuCaptchaInvalidKey": errors.RuCaptchaInvalidKey,
+            "RuCaptchaZeroBalance": errors.RuCaptchaZeroBalance,
+            "RuCaptchaBannedIP": errors.RuCaptchaBannedIP,
+            "RuCaptchaBannedAccount": errors.RuCaptchaBannedAccount,
 
-            "invalidMethod": InvalidMethod,
-            "accessDenied": AccessDenied,
+            "invalidMethod": errors.InvalidMethod,
+            "accessDenied": errors.AccessDenied,
 
-            "userWasDeletedOrBanned": UserWasDeletedOrBanned,
-            "trackRestorationTimeEnded": TrackRestorationTimeEnded,
+            "userWasDeletedOrBanned": errors.UserWasDeletedOrBanned,
+            "trackRestorationTimeEnded": errors.TrackRestorationTimeEnded,
 
-            "notFound": NotFound,
-            "chatNotFound": ChatNotFound,
+            "notFound": errors.NotFound,
+            "chatNotFound": errors.ChatNotFound,
 
-            "noneQuery": NoneQuery,
+            "noneQuery": errors.NoneQuery,
 
-            "ownerIdsAndTrackIdsTypeDifferent": OwnerIdsAndTrackIdsTypeDifferent,
-            "ownerIdsAndTrackIdsLenDifferent": OwnerIdsAndTrackIdsLenDifferent,
+            "ownerIdsAndTrackIdsTypeDifferent": errors.OwnerIdsAndTrackIdsTypeDifferent,
+            "ownerIdsAndTrackIdsLenDifferent": errors.OwnerIdsAndTrackIdsLenDifferent,
 
-            "trackReorderNeedsBeforeOrAfterArgument": TrackReorderNeedsBeforeOrAfterArgument,
-            "trackReorderNeedsOnlyBeforeOrAfterNotBoth": TrackReorderNeedsOnlyBeforeOrAfterNotBoth,
+            "trackReorderNeedsBeforeOrAfterArgument": errors.TrackReorderNeedsBeforeOrAfterArgument,
+            "trackReorderNeedsOnlyBeforeOrAfterNotBoth": errors.TrackReorderNeedsOnlyBeforeOrAfterNotBoth,
 
-            "MP3FileNotFound": MP3FileNotFound,
-            "MP3FileTooBig": MP3FileTooBig,
+            "MP3FileNotFound": errors.MP3FileNotFound,
+            "MP3FileTooBig": errors.MP3FileTooBig,
 
-            "tooHighRequestSendingRate": TooHighRequestSendingRate,
+            "tooHighRequestSendingRate": errors.TooHighRequestSendingRate,
 
-            "invalidProxyType": InvalidProxyType,
-            "invalidProxyDict": InvalidProxyDict,
+            "invalidProxyType": errors.InvalidProxyType,
+            "invalidProxyDict": errors.InvalidProxyDict,
         }
 
         if errorType not in errorsDict:
@@ -447,10 +448,10 @@ class Client(Methods):
         error = errorsDict.get(errorType)()
 
         if self._language:
-            if self._language == Language.Russian:
+            if self._language == enums.Language.Russian:
                 languageAttr = "ru"
 
-            elif self._language == Language.English:
+            elif self._language == enums.Language.English:
                 languageAttr = "en"
 
             for attr in ["ru", "en"]:

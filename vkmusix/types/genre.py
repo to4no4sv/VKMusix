@@ -30,6 +30,12 @@ class Genre(Base):
         raw (dict, optional): необработанные данные, полученные от ВКонтакте.
     """
 
+    __slots__ = (
+        'title',
+        'id',
+        'raw',
+    )
+
     def __init__(self, genre: dict = None, genreId: int = None, client: "Client" = None) -> None:
         super().__init__(client)
 

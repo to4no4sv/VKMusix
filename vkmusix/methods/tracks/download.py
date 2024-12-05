@@ -52,18 +52,16 @@ class Download:
         """
 
         from asyncio import create_task, gather
-
+        import os
         import re
 
-        import os
         import aiofiles
         import aiofiles.os
-
         from Crypto.Cipher import AES
         from Crypto.Util.Padding import pad
-
         import av
 
+        from vkmusix import web
         from vkmusix.types import Track
         from vkmusix.enums import Extension
 
@@ -79,9 +77,9 @@ class Download:
                 return
 
         async def downloadSegment(segmentUrlLocal: str, keyLocal: bytes, ivLocal: bytes) -> None:
-            segmentData = await self._client.req(segmentUrlLocal, responseType="response")
+            segmentData = await self._client(segmentUrlLocal, responseType=web.ResponseType.RESPONSE)
             while segmentData.status_code in (301, 302):
-                segmentData = await self._client.req(segmentData.headers.get("Location"), responseType="response")
+                segmentData = await self._client(segmentData.headers.get("Location"), responseType=web.ResponseType.RESPONSE)
 
             if segmentData.status_code != 200:
                 return
@@ -136,9 +134,9 @@ class Download:
         tasks = list()
 
         while True:
-            m3u8Content = await self._client.req(
+            m3u8Content = await self._client(
                 track.fileUrl,
-                responseType="response",
+                responseType=web.ResponseType.RESPONSE,
             )
 
             if m3u8Content:
@@ -146,9 +144,9 @@ class Download:
 
         while m3u8Content.status_code in (301, 302):
             while True:
-                m3u8Content = await self._client.req(
+                m3u8Content = await self._client(
                     m3u8Content.headers.get("Location"),
-                    responseType="response",
+                    responseType=web.ResponseType.RESPONSE,
                 )
 
                 if m3u8Content:
@@ -164,7 +162,7 @@ class Download:
                 if method == "AES-128":
                     if not key:
                         keyUri = line.split('URI="')[1].split('"')[0]
-                        response = await self._client.req(keyUri, responseType="response")
+                        response = await self._client(keyUri, responseType=web.ResponseType.RESPONSE)
                         contentType = response.headers.get("content-type")
                         key = response.content if contentType and contentType == "application/octet-stream" else response.text.encode()
 
@@ -237,9 +235,9 @@ class Download:
                 album = track.album
                 photo = album.photo if album else None
 
-                coverData = await self._client.req(
+                coverData = await self._client(
                     photo.get(1200) or photo.get(600) or photo.get(300) or photo.get(270),
-                    responseType="file",
+                    responseType=web.ResponseType.FILE,
                 ) if photo else None
 
                 if extension == "mp3":

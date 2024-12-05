@@ -70,6 +70,33 @@ class Album(Base):
         raw (dict): необработанные данные, полученные от ВКонтакте.
     """
 
+    __slots__ = (
+        'title',
+        'subtitle',
+        'artist',
+        'artists',
+        'featuredArtists',
+        'description',
+        'releaseYear',
+        'genres',
+        'streams',
+        'saves',
+        'uploadedAt',
+        'updatedAt',
+        'exclusive',
+        'mainColor',
+        'photo',
+        'original',
+        'trackCount',
+        'tracks',
+        'ownerId',
+        'albumId',
+        'playlistId',
+        'id',
+        'url',
+        'raw',
+    )
+
     from typing import Union, List
 
     from vkmusix.aio import async_

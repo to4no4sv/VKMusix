@@ -62,6 +62,28 @@ class Playlist(Base):
         raw (dict): необработанные данные, полученные от ВКонтакте.
     """
 
+    __slots__ = (
+        'title',
+        'subtitle',
+        'fullTitle',
+        'description',
+        'streams',
+        'saves',
+        'createdAt',
+        'updatedAt',
+        'mainColor',
+        'photo',
+        'original',
+        'trackCount',
+        'tracks',
+        'own',
+        'ownerId',
+        'playlistId',
+        'id',
+        'url',
+        'raw',
+    )
+
     from typing import Union, List
 
     from vkmusix.aio import async_

@@ -42,6 +42,18 @@ class Section(Base):
         raw (dict): необработанные данные, полученные от ВКонтакте.
     """
 
+    __slots__ = (
+        'title',
+        'subsections',
+        'tracks',
+        'playlists',
+        'recommendedPlaylists',
+        'nextOffset',
+        'id',
+        'url',
+        'raw',
+    )
+
     from typing import Union, List
 
     from vkmusix.aio import async_

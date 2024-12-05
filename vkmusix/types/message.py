@@ -36,6 +36,15 @@ class Message(Base):
         raw (dict): необработанные данные, полученные от ВКонтакте.
     """
 
+    __slots__ = (
+        'tracks',
+        'date',
+        'fromId',
+        'chatId',
+        'id',
+        'raw',
+    )
+
     def __init__(self, message: dict) -> None:
         from vkmusix.utils import unixToDatetime
 

@@ -50,6 +50,8 @@ class Api:
         :return: Ответ ВКонтакте API (``Union[dict, List[dict], bool, int, None]``).
         """
 
+        from vkmusix import web
+
         return await self._req(
             method=method,
             params=params,
@@ -59,5 +61,5 @@ class Api:
             headers=headers,
             files=files,
             version=version,
-            httpMethod=httpMethod.upper() if httpMethod and isinstance(httpMethod, str) else "GET",
+            httpMethod=httpMethod.upper() if httpMethod and isinstance(httpMethod, web.Method) else None,
         )

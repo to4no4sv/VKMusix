@@ -268,7 +268,7 @@ class Client(methods.Methods):
             cookies,
             headers,
             files,
-            method=httpMethod.value.upper() if httpMethod and isinstance(httpMethod, web.Method) else web.Method.GET,
+            method=httpMethod if httpMethod and isinstance(httpMethod, web.Method) else web.Method.GET,
         )
 
         while True:

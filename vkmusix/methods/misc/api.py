@@ -61,5 +61,5 @@ class Api:
             headers=headers,
             files=files,
             version=version,
-            httpMethod=httpMethod.upper() if httpMethod and isinstance(httpMethod, web.Method) else None,
+            httpMethod=httpMethod if httpMethod and isinstance(httpMethod, web.Method) else web.Method.GET,
         )

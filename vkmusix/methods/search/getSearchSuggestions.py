@@ -24,7 +24,7 @@ class GetSearchSuggestions:
     @async_
     async def getSearchSuggestions(self, query: str, limit: int = None) -> Union[List[str], None]:
         """
-        Получает популярные поисковые запросы.
+        Получает подсказки для поискового запроса.
 
         `Пример использования`:
 
